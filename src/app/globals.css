@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Design Tokens — DESIGN.md §4 / §62
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: #F5F7FC;
+    --surface: #FFFFFF;
+    --surface-subtle: #F8FAFD;
+    --surface-hover: #F3F5FA;
+
+    /* Text */
+    --text-primary: #0B1F33;
+    --text-secondary: #5F6B7A;
+    --text-muted: #8B95A5;
+
+    /* Borders */
+    --border: #E4E9F1;
+    --border-strong: #D3DBE7;
+
+    /* Brand */
+    --primary: #4F46F5;
+    --primary-hover: #4338E8;
+    --primary-soft: #EEF0FF;
+    --accent: #695CFF;
+    --accent-secondary: #3158FF;
+
+    /* Status */
+    --success: #13A66D;
+    --success-soft: #EAF8F2;
+    --warning: #E9A116;
+    --warning-soft: #FFF7E5;
+    --danger: #E84C5B;
+    --danger-soft: #FFF0F2;
+    --sale: #F04455;
+    --new: #13A66D;
+
+    /* Overlay */
+    --overlay: rgba(5, 17, 32, 0.42);
+
+    /* ── Liquid Glass tokens (DESIGN.md §62.3) ── */
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.75);
+    --glass-blur: 18px;
+    --glass-shadow: 0 8px 32px rgba(16, 34, 58, 0.10),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.80);
+
+    /* ── shadcn/ui semantic aliases ── */
+    --foreground: var(--text-primary);
+    --card: var(--surface);
+    --card-foreground: var(--text-primary);
+    --muted: var(--surface-subtle);
+    --muted-foreground: var(--text-muted);
+    --popover: var(--surface);
+    --popover-foreground: var(--text-primary);
+    --destructive: var(--danger);
+    --destructive-foreground: #ffffff;
+    --input: var(--border);
+    --ring: var(--primary);
+    --radius: 10px;
+
+    /* ── Elevation shadows ── */
+    --shadow-card: 0 4px 16px rgba(16, 34, 58, 0.05);
+    --shadow-drawer: 0 18px 50px rgba(12, 27, 48, 0.16);
+  }
+
+  .dark {
+    --background: #07111F;
+    --surface: #0D1B2A;
+    --surface-subtle: #122235;
+    --surface-hover: #172A40;
+
+    --text-primary: #F6F8FC;
+    --text-secondary: #B7C2D1;
+    --text-muted: #8593A6;
+
+    --border: #22354A;
+    --border-strong: #324A64;
+
+    --primary: #716BFF;
+    --primary-hover: #817CFF;
+    --primary-soft: #20214C;
+
+    --success: #37C58B;
+    --warning: #F0B84A;
+    --danger: #F36A75;
+
+    --glass-bg: rgba(13, 27, 42, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.10);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    --foreground: var(--text-primary);
+    --card: var(--surface);
+    --card-foreground: var(--text-primary);
+    --muted: var(--surface-subtle);
+    --muted-foreground: var(--text-muted);
+    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.25);
+    --shadow-drawer: 0 18px 50px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Base styles
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--primary-soft);
+    color: var(--primary);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Liquid Glass utility (DESIGN.md §62.4)
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Graceful degradation — DESIGN.md §62.5 */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      background: var(--surface);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+
+  /* Reduced motion — DESIGN.md §63.6 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Scrollbar styling
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
