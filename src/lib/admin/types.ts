@@ -34,6 +34,8 @@ export interface AdminProductItem {
   basePriceMinor: number;
   totalStock: number;
   variantCount: number;
+  imageUrl?: string | null;
+  sku?: string;
 }
 
 export interface AdminOrderItem {

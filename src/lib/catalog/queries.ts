@@ -113,7 +113,7 @@ export async function getProducts(
         images: ProductImage[];
       };
 
-      items = (dbProducts as unknown as DbProductRecord[]).map((p) => {
+      const mappedDbProducts = (dbProducts as unknown as DbProductRecord[]).map((p) => {
         const variants = (p.variants || []).filter((v) => v.is_active);
         const prices = variants.map((v) => v.price_minor);
         const minPriceMinor = prices.length ? Math.min(...prices) : 0;
@@ -147,9 +147,18 @@ export async function getProducts(
           totalStock,
         };
       });
+
+      // Prepend DB products, avoid duplicates if slug matches
+      const dbSlugs = new Set(mappedDbProducts.map((p) => p.slug));
+      items = [
+        ...mappedDbProducts,
+        ...FIXTURE_PRODUCTS.filter((f) => !dbSlugs.has(f.slug)),
+      ];
+    } else if (error) {
+      console.warn("getProducts query warning:", error.message);
     }
-  } catch {
-    // Continue with items
+  } catch (err) {
+    console.warn("getProducts exception:", err);
   }
 
   // 1. Text Search query
@@ -272,8 +281,69 @@ export async function getProducts(
  * Retrieve single product with variants by slug
  */
 export async function getProductBySlug(slug: string): Promise<ProductWithDetails | null> {
-  const result = await getProducts();
-  const found = result.products.find((p) => p.slug === slug);
+  try {
+    const supabase = await createClient();
+    const { data: p, error } = await supabase
+      .from("products")
+      .select(`
+        *,
+        category:categories(*),
+        brand:brands(*),
+        variants:product_variants(*),
+        images:product_images(*)
+      `)
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .eq("is_archived", false)
+      .maybeSingle();
+
+    if (!error && p) {
+      type DbProductRecord = Product & {
+        category: Category | null;
+        brand: Brand | null;
+        variants: ProductVariant[];
+        images: ProductImage[];
+      };
+      const dbP = p as unknown as DbProductRecord;
+      const variants = (dbP.variants || []).filter((v) => v.is_active);
+      const prices = variants.map((v) => v.price_minor);
+      const minPriceMinor = prices.length ? Math.min(...prices) : 0;
+      const maxPriceMinor = prices.length ? Math.max(...prices) : 0;
+      const primaryImage =
+        dbP.images?.find((img) => img.is_primary)?.storage_path ||
+        dbP.images?.[0]?.storage_path ||
+        undefined;
+      const totalStock = variants.reduce((acc, v) => acc + (v.stock || 0), 0);
+
+      return {
+        ...dbP,
+        variants,
+        images: dbP.images || [],
+        primaryImage,
+        minPriceMinor,
+        maxPriceMinor,
+        compareAtMinor: variants[0]?.compare_at_minor || null,
+        hasDiscount: !!variants[0]?.compare_at_minor && variants[0].compare_at_minor > minPriceMinor,
+        discountPercentage:
+          variants[0]?.compare_at_minor && variants[0].compare_at_minor > minPriceMinor
+            ? Math.round(
+                ((variants[0].compare_at_minor - minPriceMinor) /
+                  variants[0].compare_at_minor) *
+                  100
+              )
+            : undefined,
+        ratingAverage: 4.8,
+        ratingCount: 24,
+        inStock: totalStock > 0,
+        totalStock,
+      };
+    }
+  } catch (err) {
+    console.warn("getProductBySlug exception:", err);
+  }
+
+  // Fallback to fixture catalog
+  const found = FIXTURE_PRODUCTS.find((p) => p.slug === slug);
   return found || null;
 }
 

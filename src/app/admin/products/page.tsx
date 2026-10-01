@@ -78,13 +78,33 @@ export default async function AdminProductsPage() {
                       className="hover:bg-[var(--surface-muted)]/30 transition-colors"
                     >
                       <td className="py-3.5 px-4 font-bold">
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-[var(--text-muted)] shrink-0" />
-                          <span className="truncate max-w-[220px]">{p.name}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--surface-muted)] shrink-0 flex items-center justify-center">
+                            {p.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={p.imageUrl}
+                                alt={p.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Package className="h-4 w-4 text-[var(--text-muted)]" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="truncate max-w-[220px] block">{p.name}</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {p.sku && (
+                                <span className="text-[10px] text-[var(--text-muted)] font-mono font-normal">
+                                  {p.sku}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                                /{p.slug}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                          /{p.slug}
-                        </span>
                       </td>
 
                       <td className="py-3.5 px-4 text-[var(--text-secondary)]">

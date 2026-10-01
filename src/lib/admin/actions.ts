@@ -43,6 +43,7 @@ interface DbProductRow {
   brands: { name: string } | null;
   product_variants: {
     id: string;
+    sku?: string;
     price_minor: number;
     stock: number;
   }[];
@@ -163,51 +164,75 @@ export async function getAdminAnalyticsAction(): Promise<AdminAnalyticsSummary> 
  * Fetch all products with catalog info and total inventory
  */
 export async function getAdminProductsAction(): Promise<AdminProductItem[]> {
-  await requireAdminSession();
-  const supabase = createAdminClient();
+  try {
+    await requireAdminSession();
+    const supabase = createAdminClient();
 
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      id,
-      name,
-      slug,
-      is_active,
-      categories (name),
-      brands (name),
-      product_variants (
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
         id,
-        price_minor,
-        stock
-      )
-    `)
-    .eq("is_archived", false)
-    .order("created_at", { ascending: false });
+        name,
+        slug,
+        is_active,
+        categories (name),
+        brands (name),
+        product_variants (
+          id,
+          sku,
+          price_minor,
+          stock
+        ),
+        product_images (
+          storage_path,
+          is_primary
+        )
+      `)
+      .eq("is_archived", false)
+      .order("created_at", { ascending: false });
 
-  if (error || !data) return [];
+    if (error) {
+      console.error("getAdminProductsAction query error:", error);
+      return [];
+    }
+    if (!data) return [];
 
-  const rawList = data as unknown as DbProductRow[];
+    const rawList = data as unknown as (DbProductRow & {
+      product_images?: Array<{ storage_path: string; is_primary: boolean }>;
+    })[];
 
-  return rawList.map((p) => {
-    const variants = p.product_variants || [];
-    const totalStock = variants.reduce((acc, v) => acc + (v.stock || 0), 0);
-    const basePriceMinor =
-      variants.length > 0
-        ? Math.min(...variants.map((v) => v.price_minor))
-        : 0;
+    return rawList.map((p) => {
+      const variants = p.product_variants || [];
+      const totalStock = variants.reduce((acc, v) => acc + (v.stock || 0), 0);
+      const basePriceMinor =
+        variants.length > 0
+          ? Math.min(...variants.map((v) => v.price_minor))
+          : 0;
+      const images = p.product_images || [];
+      const primaryImg =
+        images.find((i) => i.is_primary)?.storage_path ||
+        images[0]?.storage_path ||
+        null;
+      const firstSku = variants[0]?.sku;
 
-    return {
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      categoryName: p.categories?.name || "General",
-      brandName: p.brands?.name || "Generic",
-      isActive: p.is_active,
-      basePriceMinor,
-      totalStock,
-      variantCount: variants.length,
-    };
-  });
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        categoryName: p.categories?.name || "General",
+        brandName: p.brands?.name || "Generic",
+        isActive: p.is_active,
+        basePriceMinor,
+        totalStock,
+        variantCount: variants.length,
+        imageUrl: primaryImg,
+        sku: firstSku,
+      };
+    });
+  } catch (err) {
+    console.error("getAdminProductsAction error:", err);
+    return [];
+  }
 }
 
 /**
@@ -637,91 +662,179 @@ export async function createProductAction(formData: FormData): Promise<{
   productId?: string;
   error?: string;
 }> {
-  const session = await requireAdminSession();
-  const supabase = createAdminClient();
+  try {
+    const session = await requireAdminSession();
+    const supabase = createAdminClient();
 
-  const name = (formData.get("name") as string)?.trim();
-  const customSlug = (formData.get("slug") as string)?.trim();
-  const description = (formData.get("description") as string)?.trim();
-  const categoryId = (formData.get("categoryId") as string) || null;
-  const brandId = (formData.get("brandId") as string) || null;
-  const rawPriceNaira = Number(formData.get("priceNaira"));
-  const sku = (formData.get("sku") as string)?.trim().toUpperCase();
-  const initialStock = Number(formData.get("stock") || 0);
+    const name = (formData.get("name") as string)?.trim();
+    const customSlug = (formData.get("slug") as string)?.trim();
+    const description = (formData.get("description") as string)?.trim();
+    const rawCategoryId = (formData.get("categoryId") as string)?.trim() || null;
+    const rawBrandId = (formData.get("brandId") as string)?.trim() || null;
+    const rawPriceNaira = Number(formData.get("priceNaira"));
+    const sku = (formData.get("sku") as string)?.trim().toUpperCase();
+    const initialStock = Number(formData.get("stock") || 0);
 
-  if (!name) return { success: false, error: "Product name is required." };
-  if (!sku) return { success: false, error: "SKU is required." };
-  if (isNaN(rawPriceNaira) || rawPriceNaira <= 0) {
-    return { success: false, error: "Please enter a valid price." };
+    if (!name) return { success: false, error: "Product name is required." };
+    if (!sku) return { success: false, error: "SKU is required." };
+    if (isNaN(rawPriceNaira) || rawPriceNaira <= 0) {
+      return { success: false, error: "Please enter a valid price." };
+    }
+
+    const slug =
+      customSlug ||
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+
+    const priceMinor = Math.round(rawPriceNaira * 100);
+
+    // Safely resolve categoryId (ensure valid UUID format or lookup by slug)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let categoryId: string | null = null;
+    if (rawCategoryId) {
+      if (uuidRegex.test(rawCategoryId)) {
+        categoryId = rawCategoryId;
+      } else {
+        const { data: cat } = await supabase
+          .from("categories")
+          .select("id")
+          .or(`slug.eq.${rawCategoryId},name.ilike.${rawCategoryId}`)
+          .maybeSingle();
+        categoryId = cat?.id || null;
+      }
+    }
+
+    // Safely resolve brandId (ensure valid UUID format or lookup by slug)
+    let brandId: string | null = null;
+    if (rawBrandId) {
+      if (uuidRegex.test(rawBrandId)) {
+        brandId = rawBrandId;
+      } else {
+        const { data: br } = await supabase
+          .from("brands")
+          .select("id")
+          .or(`slug.eq.${rawBrandId},name.ilike.${rawBrandId}`)
+          .maybeSingle();
+        brandId = br?.id || null;
+      }
+    }
+
+    // 1. Insert product
+    const { data: product, error: prodErr } = await supabase
+      .from("products")
+      .insert({
+        name,
+        slug,
+        description: description || null,
+        category_id: categoryId,
+        brand_id: brandId,
+        is_active: true,
+        is_archived: false,
+      })
+      .select("id")
+      .single();
+
+    if (prodErr || !product) {
+      console.error("createProduct prodErr:", prodErr);
+      return {
+        success: false,
+        error: prodErr?.message || "Failed to create product in database.",
+      };
+    }
+
+    // 2. Insert initial variant
+    const { data: variant, error: varErr } = await supabase
+      .from("product_variants")
+      .insert({
+        product_id: product.id,
+        sku,
+        price_minor: priceMinor,
+        stock: initialStock,
+        options: { Standard: "Default" },
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (varErr || !variant) {
+      console.error("createProduct varErr:", varErr);
+      return {
+        success: false,
+        error: varErr?.message || "Failed to create product variant.",
+      };
+    }
+
+    // 3. Handle image upload or image URL
+    const imageFile = formData.get("imageFile") as File | null;
+    const directImageUrl = (formData.get("imageUrl") as string)?.trim() || null;
+    let finalImageUrl: string | null = directImageUrl;
+
+    if (imageFile && imageFile.size > 0 && typeof imageFile.arrayBuffer === "function") {
+      try {
+        const fileExt = imageFile.name.split(".").pop() || "jpg";
+        const sanitizedPath = `products/${product.id}-${Date.now()}.${fileExt}`;
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from("product-images")
+          .upload(sanitizedPath, buffer, {
+            contentType: imageFile.type || "image/jpeg",
+            upsert: true,
+          });
+
+        if (!uploadErr && uploadData?.path) {
+          const { data: publicUrlData } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(uploadData.path);
+          finalImageUrl = publicUrlData.publicUrl;
+        } else if (uploadErr) {
+          console.warn("Storage upload warning:", uploadErr);
+        }
+      } catch (uploadException) {
+        console.warn("Storage upload exception:", uploadException);
+      }
+    }
+
+    // If an image was provided or uploaded, link it to product_images
+    if (finalImageUrl) {
+      const { error: imgErr } = await supabase.from("product_images").insert({
+        product_id: product.id,
+        storage_path: finalImageUrl,
+        alt_text: name,
+        is_primary: true,
+        sort_order: 1,
+      });
+      if (imgErr) {
+        console.warn("product_images insert warning:", imgErr);
+      }
+    }
+
+    // 4. Record initial inventory movement if stock > 0
+    if (initialStock > 0) {
+      await supabase.from("inventory_movements").insert({
+        variant_id: variant.id,
+        delta: initialStock,
+        reason: "restock",
+        note: "Initial product stock on creation",
+        created_by: session.user?.id,
+      });
+    }
+
+    revalidatePath("/admin/products");
+    revalidatePath("/admin");
+    revalidatePath("/shop");
+    revalidatePath("/");
+    revalidatePath(`/product/${slug}`);
+
+    return { success: true, productId: product.id };
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "An unexpected server error occurred.";
+    console.error("createProductAction error:", err);
+    return { success: false, error: message };
   }
-
-  const slug =
-    customSlug ||
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
-
-  const priceMinor = Math.round(rawPriceNaira * 100);
-
-  // 1. Insert product
-  const { data: product, error: prodErr } = await supabase
-    .from("products")
-    .insert({
-      name,
-      slug,
-      description: description || null,
-      category_id: categoryId,
-      brand_id: brandId,
-      is_active: true,
-      is_archived: false,
-    })
-    .select("id")
-    .single();
-
-  if (prodErr || !product) {
-    return {
-      success: false,
-      error: prodErr?.message || "Failed to create product.",
-    };
-  }
-
-  // 2. Insert initial variant
-  const { data: variant, error: varErr } = await supabase
-    .from("product_variants")
-    .insert({
-      product_id: product.id,
-      sku,
-      price_minor: priceMinor,
-      stock: initialStock,
-      options: { Standard: "Default" },
-      is_active: true,
-    })
-    .select("id")
-    .single();
-
-  if (varErr || !variant) {
-    return {
-      success: false,
-      error: varErr?.message || "Failed to create variant.",
-    };
-  }
-
-  // 3. Record initial inventory movement if stock > 0
-  if (initialStock > 0) {
-    await supabase.from("inventory_movements").insert({
-      variant_id: variant.id,
-      delta: initialStock,
-      reason: "restock",
-      note: "Initial product stock on creation",
-      created_by: session.user?.id,
-    });
-  }
-
-  revalidatePath("/admin/products");
-  revalidatePath("/admin");
-  revalidatePath("/shop");
-  return { success: true, productId: product.id };
 }
 
 /**

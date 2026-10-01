@@ -171,17 +171,24 @@ export function UserNav() {
 
         <DropdownMenuSeparator />
 
-        <form action={signOutAction} className="w-full">
-          <DropdownMenuItem asChild destructive>
-            <button
-              type="submit"
-              className="w-full flex items-center gap-2 cursor-pointer"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <DropdownMenuItem
+          destructive
+          className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10 flex items-center gap-2"
+          onSelect={async () => {
+            try {
+              const supabase = createClient();
+              await supabase.auth.signOut();
+              setUser(null);
+              setIsAdmin(false);
+              await signOutAction();
+            } catch {
+              window.location.href = "/sign-in";
+            }
+          }}
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign Out</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
