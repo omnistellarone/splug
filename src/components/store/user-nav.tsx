@@ -87,8 +87,8 @@ export function UserNav() {
           href="/sign-in"
           className={cn(
             "flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold",
-            "text-[var(--text-secondary)] transition-colors duration-150",
-            "hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            "text-slate-700 dark:text-slate-200 transition-colors duration-150",
+            "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
           )}
         >
           Sign In

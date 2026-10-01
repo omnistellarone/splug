@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, Heart, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { UserNav } from "@/components/store/user-nav";
 import { CartTrigger } from "@/components/cart/cart-trigger";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -19,51 +19,27 @@ const NAV_LINKS = [
 ];
 
 export function SiteHeader() {
+  const router = useRouter();
   const headerRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // GSAP entrance + scroll glass intensification — DESIGN.md §63.3
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+      setMobileOpen(false);
+    }
+  };
+
   useEffect(() => {
-    let ScrollTrigger: typeof import("gsap/ScrollTrigger").ScrollTrigger | null =
-      null;
-
-    const prefersReducedMotion =
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const init = async () => {
-      const { gsap } = await import("gsap");
-      const { ScrollTrigger: ST } = await import("gsap/ScrollTrigger");
-      gsap.registerPlugin(ST);
-      ScrollTrigger = ST;
-
-      if (!headerRef.current || prefersReducedMotion) return;
-
-      // Entrance animation — slide down from y: -20
-      gsap.from(headerRef.current, {
-        y: -20,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power2.out",
-      });
-
-      // Scroll: intensify glass blur
-      ST.create({
-        start: 60,
-        onEnter: () => {
-          setScrolled(true);
-        },
-        onLeaveBack: () => {
-          setScrolled(false);
-        },
-      });
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
     };
-
-    init();
-
-    return () => {
-      ScrollTrigger?.getAll().forEach((t) => t.kill());
-    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -73,8 +49,8 @@ export function SiteHeader() {
         ref={headerRef}
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-          "glass",
-          scrolled ? "[--glass-blur:28px] border-[var(--glass-border)]" : ""
+          "bg-white/95 dark:bg-[#07111F]/95 backdrop-blur-xl border-b border-slate-200/90 dark:border-slate-800/90",
+          scrolled ? "shadow-md bg-white dark:bg-[#07111F]" : "shadow-xs"
         )}
         style={{ height: "68px" }}
       >
@@ -82,45 +58,47 @@ export function SiteHeader() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex-shrink-0 text-xl font-bold tracking-tight text-[var(--text-primary)]"
+            className="flex-shrink-0 text-xl font-black tracking-tight text-slate-950 dark:text-white"
             aria-label="Splug Electronics — Home"
           >
             Splug<span className="text-[var(--primary)]">.</span>
           </Link>
 
           {/* Desktop search */}
-          <div className="hidden flex-1 max-w-[520px] md:flex mx-auto">
-            <div className="relative w-full">
+          <div className="hidden flex-1 max-w-[500px] md:flex mx-auto">
+            <form onSubmit={handleSearchSubmit} className="relative w-full">
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
                 aria-hidden
               />
               <input
                 type="search"
-                placeholder="Search phones, laptops, audio…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search phones, laptops, audio, accessories…"
                 aria-label="Search products"
                 className={cn(
-                  "w-full rounded-lg py-2.5 pl-9 pr-4 text-sm",
-                  "bg-[var(--surface-subtle)] border border-[var(--border)]",
-                  "text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-                  "transition-colors duration-150",
-                  "focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+                  "w-full rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm font-semibold",
+                  "bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700",
+                  "text-slate-950 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400",
+                  "transition-all duration-150",
+                  "focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
                 )}
               />
-            </div>
+            </form>
           </div>
 
           {/* Desktop nav */}
-          <nav aria-label="Primary navigation" className="hidden lg:flex gap-1">
+          <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-3 py-2 text-sm font-medium rounded-lg",
-                  "text-[var(--text-secondary)] transition-colors duration-150",
-                  "hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+                  "px-3.5 py-1.5 text-sm font-bold rounded-lg",
+                  "text-slate-800 dark:text-slate-100 transition-colors duration-150",
+                  "hover:text-[var(--primary)] hover:bg-slate-100 dark:hover:bg-slate-800/80"
                 )}
               >
                 {link.label}
@@ -129,7 +107,7 @@ export function SiteHeader() {
           </nav>
 
           {/* Utilities */}
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1.5">
             <ThemeToggle />
 
             <Link
@@ -137,11 +115,11 @@ export function SiteHeader() {
               aria-label="Wishlist"
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-lg",
-                "text-[var(--text-secondary)] transition-colors duration-150",
-                "hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                "text-slate-800 dark:text-slate-100 transition-colors duration-150",
+                "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
               )}
             >
-              <Heart size={18} strokeWidth={1.75} />
+              <Heart size={18} strokeWidth={2} />
             </Link>
 
             {/* Dynamic Cart Drawer Trigger */}
@@ -150,7 +128,7 @@ export function SiteHeader() {
             {/* Dynamic User Navigation Menu */}
             <UserNav />
 
-            {/* Mobile menu button */}
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileOpen((o) => !o)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -158,14 +136,14 @@ export function SiteHeader() {
               aria-controls="mobile-nav"
               className={cn(
                 "flex lg:hidden h-9 w-9 items-center justify-center rounded-lg",
-                "text-[var(--text-secondary)] transition-colors duration-150",
-                "hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                "text-slate-800 dark:text-slate-100 transition-colors duration-150",
+                "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
               )}
             >
               {mobileOpen ? (
-                <X size={18} strokeWidth={1.75} />
+                <X size={20} strokeWidth={2} />
               ) : (
-                <Menu size={18} strokeWidth={1.75} />
+                <Menu size={20} strokeWidth={2} />
               )}
             </button>
           </div>
@@ -180,43 +158,45 @@ export function SiteHeader() {
           aria-label="Mobile navigation"
           className={cn(
             "fixed inset-0 z-40 flex flex-col pt-[68px]",
-            "bg-[var(--background)]/95 backdrop-blur-sm"
+            "bg-white/98 dark:bg-[#07111F]/98 backdrop-blur-xl animate-in fade-in-0 duration-200"
           )}
         >
           {/* Mobile search */}
-          <div className="px-4 py-4 border-b border-[var(--border)]">
-            <div className="relative">
+          <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-800">
+            <form onSubmit={handleSearchSubmit} className="relative">
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                 aria-hidden
               />
               <input
                 type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products…"
                 aria-label="Search products"
                 autoFocus
                 className={cn(
-                  "w-full rounded-lg py-3 pl-9 pr-4 text-sm",
-                  "bg-[var(--surface)] border border-[var(--border)]",
-                  "text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-                  "focus:outline-none focus:border-[var(--primary)]"
+                  "w-full rounded-xl py-3 pl-10 pr-4 text-sm font-medium",
+                  "bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700",
+                  "text-slate-900 dark:text-white placeholder:text-slate-400",
+                  "focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
                 )}
               />
-            </div>
+            </form>
           </div>
 
-          {/* Mobile nav links */}
-          <nav aria-label="Mobile navigation" className="flex flex-col px-4 py-3 gap-1">
+          {/* Links */}
+          <nav aria-label="Mobile navigation links" className="flex flex-col p-4 gap-1 flex-1 overflow-y-auto">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  "px-4 py-3 text-base font-medium rounded-lg",
-                  "text-[var(--text-primary)] transition-colors duration-150",
-                  "hover:bg-[var(--surface-hover)]"
+                  "flex items-center px-4 py-3 text-base font-bold rounded-xl",
+                  "text-slate-900 dark:text-slate-100 transition-colors",
+                  "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
                 )}
               >
                 {link.label}
@@ -225,9 +205,6 @@ export function SiteHeader() {
           </nav>
         </div>
       )}
-
-      {/* Spacer so content clears the fixed header */}
-      <div style={{ height: "68px" }} aria-hidden />
     </>
   );
 }

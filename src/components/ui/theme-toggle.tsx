@@ -46,9 +46,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={`Switch theme. Current: ${current.label}`}
       title={`Theme: ${current.label}`}
       className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-lg",
-        "text-[var(--text-secondary)] transition-colors duration-150",
-        "hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]",
+        "flex h-9 w-9 items-center justify-center rounded-lg cursor-pointer",
+        "text-slate-700 dark:text-slate-200 transition-colors duration-150",
+        "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)]",
         className
       )}

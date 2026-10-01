@@ -18,8 +18,8 @@ export function CartTrigger() {
       id="cart-icon"
       className={cn(
         "relative flex h-9 w-9 items-center justify-center rounded-lg cursor-pointer",
-        "text-[var(--text-secondary)] transition-colors duration-150 select-none",
-        "hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+        "text-slate-700 dark:text-slate-200 transition-colors duration-150 select-none",
+        "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
       )}
     >
       <ShoppingCart size={18} strokeWidth={1.75} />
