@@ -85,8 +85,9 @@ export default async function HomePage() {
 
       {/* ── Featured Products Grid ── */}
       <section
+        id="catalog"
         aria-labelledby="featured-heading"
-        className="bg-[var(--surface-subtle)] py-14 sm:py-20 border-y border-[var(--border)]"
+        className="bg-[var(--surface-subtle)] py-14 sm:py-20 border-y border-[var(--border)] scroll-mt-20"
       >
         <div className="mx-auto max-w-[1440px] px-4 md:px-6 lg:px-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">

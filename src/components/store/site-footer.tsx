@@ -88,8 +88,11 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-4 lg:col-span-1">
-            <p className="text-2xl font-bold text-white">
-              Splug<span className="text-[var(--primary)]">.</span>
+            <p className="text-2xl font-bold text-white flex items-center gap-1">
+              <span>Splug</span>
+              <span className="text-xs font-semibold opacity-70 tracking-normal align-top -mt-1.5">
+                ®
+              </span>
             </p>
             <p className="mt-2 text-sm text-white/50 max-w-[220px]">
               Premium electronics at fair prices, delivered across Nigeria.

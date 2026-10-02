@@ -5,7 +5,11 @@ import { ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/lib/cart/store";
 import { cn } from "@/lib/utils";
 
-export function CartTrigger() {
+interface CartTriggerProps {
+  className?: string;
+}
+
+export function CartTrigger({ className }: CartTriggerProps) {
   const { items, openCart, hasHydrated } = useCartStore();
 
   const totalCount = items.reduce((acc, i) => acc + i.quantity, 0);
@@ -19,7 +23,8 @@ export function CartTrigger() {
       className={cn(
         "relative flex h-9 w-9 items-center justify-center rounded-lg cursor-pointer",
         "text-slate-700 dark:text-slate-200 transition-colors duration-150 select-none",
-        "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
+        "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]",
+        className
       )}
     >
       <ShoppingCart size={18} strokeWidth={1.75} />

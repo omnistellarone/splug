@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export function UserNav() {
+export function UserNav({ className }: { className?: string } = {}) {
   const [user, setUser] = React.useState<{
     id: string;
     email?: string;
@@ -88,7 +88,8 @@ export function UserNav() {
           className={cn(
             "flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold",
             "text-slate-700 dark:text-slate-200 transition-colors duration-150",
-            "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
+            "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]",
+            className
           )}
         >
           Sign In

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search, Heart, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { UserNav } from "@/components/store/user-nav";
@@ -20,10 +20,13 @@ const NAV_LINKS = [
 
 export function SiteHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const isHomeHero = pathname === "/" && !scrolled;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,32 +47,43 @@ export function SiteHeader() {
 
   return (
     <>
-      {/* ── Desktop / Tablet Header ── */}
+      {/* ── Main Site Header ── */}
       <header
         ref={headerRef}
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-          "bg-white/95 dark:bg-[#07111F]/95 backdrop-blur-xl border-b border-slate-200/90 dark:border-slate-800/90",
-          scrolled ? "shadow-md bg-white dark:bg-[#07111F]" : "shadow-xs"
+          isHomeHero
+            ? "bg-transparent border-b border-transparent text-white"
+            : "bg-white/92 dark:bg-[#080A0F]/92 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs text-slate-900 dark:text-white",
+          scrolled && "shadow-md"
         )}
         style={{ height: "68px" }}
       >
         <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-4 md:px-6 lg:px-10">
-          {/* Logo */}
+          {/* Brand Logo matching Image 3 (Splug ®) */}
           <Link
             href="/"
-            className="flex-shrink-0 text-xl font-black tracking-tight text-slate-950 dark:text-white"
-            aria-label="Splug Electronics — Home"
+            className={cn(
+              "flex-shrink-0 text-xl font-bold tracking-tight transition-colors duration-200 flex items-center gap-1",
+              isHomeHero ? "text-white" : "text-slate-950 dark:text-white"
+            )}
+            aria-label="Splug — Home"
           >
-            Splug<span className="text-[var(--primary)]">.</span>
+            <span>Splug</span>
+            <span className="text-[11px] font-semibold opacity-75 tracking-normal align-top -mt-1.5">
+              ®
+            </span>
           </Link>
 
-          {/* Desktop search */}
-          <div className="hidden flex-1 max-w-[500px] md:flex mx-auto">
+          {/* Desktop Search */}
+          <div className="hidden flex-1 max-w-[460px] md:flex mx-auto">
             <form onSubmit={handleSearchSubmit} className="relative w-full">
               <Search
                 size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
+                className={cn(
+                  "absolute left-3.5 top-1/2 -translate-y-1/2",
+                  isHomeHero ? "text-white/60" : "text-slate-400 dark:text-slate-500"
+                )}
                 aria-hidden
               />
               <input
@@ -79,26 +93,27 @@ export function SiteHeader() {
                 placeholder="Search phones, laptops, audio, accessories…"
                 aria-label="Search products"
                 className={cn(
-                  "w-full rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm font-semibold",
-                  "bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700",
-                  "text-slate-950 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400",
-                  "transition-all duration-150",
-                  "focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+                  "w-full rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm font-medium transition-all duration-200",
+                  isHomeHero
+                    ? "bg-white/10 border border-white/20 text-white placeholder:text-white/60 focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20"
+                    : "bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-950 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20",
+                  "focus:outline-none"
                 )}
               />
             </form>
           </div>
 
-          {/* Desktop nav */}
+          {/* Desktop Navigation Links */}
           <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-3.5 py-1.5 text-sm font-bold rounded-lg",
-                  "text-slate-800 dark:text-slate-100 transition-colors duration-150",
-                  "hover:text-[var(--primary)] hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                  "px-3.5 py-1.5 text-sm font-medium rounded-lg transition-colors duration-150",
+                  isHomeHero
+                    ? "text-white/80 hover:text-white hover:bg-white/10"
+                    : "text-slate-700 dark:text-slate-200 hover:text-[var(--primary)] hover:bg-slate-100 dark:hover:bg-slate-800/80"
                 )}
               >
                 {link.label}
@@ -106,38 +121,55 @@ export function SiteHeader() {
             ))}
           </nav>
 
-          {/* Utilities */}
+          {/* Header Utilities */}
           <div className="ml-auto flex items-center gap-1.5">
-            <ThemeToggle />
+            <ThemeToggle
+              className={cn(
+                isHomeHero &&
+                  "text-white hover:bg-white/10 hover:text-white focus-visible:outline-white"
+              )}
+            />
 
             <Link
               href="/wishlist"
               aria-label="Wishlist"
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-lg",
-                "text-slate-800 dark:text-slate-100 transition-colors duration-150",
-                "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors duration-150",
+                isHomeHero
+                  ? "text-white hover:bg-white/10"
+                  : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
               )}
             >
-              <Heart size={18} strokeWidth={2} />
+              <Heart size={18} strokeWidth={1.75} />
             </Link>
 
-            {/* Dynamic Cart Drawer Trigger */}
-            <CartTrigger />
+            {/* Cart Trigger */}
+            <CartTrigger
+              className={cn(
+                isHomeHero &&
+                  "text-white hover:bg-white/10 hover:text-white"
+              )}
+            />
 
-            {/* Dynamic User Navigation Menu */}
-            <UserNav />
+            {/* User Account Navigation */}
+            <UserNav
+              className={cn(
+                isHomeHero &&
+                  "text-white hover:bg-white/10 hover:text-white"
+              )}
+            />
 
-            {/* Mobile menu toggle */}
+            {/* Mobile Menu Toggle (Matches hamburger in Image 3) */}
             <button
               onClick={() => setMobileOpen((o) => !o)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
               className={cn(
-                "flex lg:hidden h-9 w-9 items-center justify-center rounded-lg",
-                "text-slate-800 dark:text-slate-100 transition-colors duration-150",
-                "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
+                "flex lg:hidden h-9 w-9 items-center justify-center rounded-lg transition-colors duration-150",
+                isHomeHero
+                  ? "text-white hover:bg-white/10"
+                  : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
               )}
             >
               {mobileOpen ? (
@@ -150,18 +182,15 @@ export function SiteHeader() {
         </div>
       </header>
 
-      {/* ── Mobile Nav Drawer ── */}
+      {/* ── Mobile Navigation Drawer ── */}
       {mobileOpen && (
         <div
           id="mobile-nav"
           role="dialog"
           aria-label="Mobile navigation"
-          className={cn(
-            "fixed inset-0 z-40 flex flex-col pt-[68px]",
-            "bg-white/98 dark:bg-[#07111F]/98 backdrop-blur-xl animate-in fade-in-0 duration-200"
-          )}
+          className="fixed inset-0 z-40 flex flex-col pt-[68px] bg-white/98 dark:bg-[#080A0F]/98 backdrop-blur-xl animate-in fade-in-0 duration-200"
         >
-          {/* Mobile search */}
+          {/* Mobile search bar */}
           <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-800">
             <form onSubmit={handleSearchSubmit} className="relative">
               <Search
@@ -177,7 +206,7 @@ export function SiteHeader() {
                 aria-label="Search products"
                 autoFocus
                 className={cn(
-                  "w-full rounded-xl py-3 pl-10 pr-4 text-sm font-medium",
+                  "w-full rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium",
                   "bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700",
                   "text-slate-900 dark:text-white placeholder:text-slate-400",
                   "focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
@@ -186,22 +215,33 @@ export function SiteHeader() {
             </form>
           </div>
 
-          {/* Links */}
-          <nav aria-label="Mobile navigation links" className="flex flex-col p-4 gap-1 flex-1 overflow-y-auto">
+          {/* Mobile links */}
+          <nav aria-label="Mobile navigation links" className="flex flex-col p-4 gap-1.5 flex-1 overflow-y-auto">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  "flex items-center px-4 py-3 text-base font-bold rounded-xl",
+                  "flex items-center justify-between px-4 py-3 text-base font-semibold rounded-xl",
                   "text-slate-900 dark:text-slate-100 transition-colors",
                   "hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
                 )}
               >
-                {link.label}
+                <span>{link.label}</span>
               </Link>
             ))}
+
+            <div className="my-2 border-t border-slate-200 dark:border-slate-800 pt-2" />
+
+            <Link
+              href="/wishlist"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-[var(--primary)]"
+            >
+              <Heart size={18} />
+              <span>Saved Wishlist</span>
+            </Link>
           </nav>
         </div>
       )}
