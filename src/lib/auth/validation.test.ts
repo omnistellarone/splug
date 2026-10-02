@@ -96,7 +96,7 @@ describe("Auth Validation Schemas", () => {
   describe("forgotPasswordSchema", () => {
     it("accepts valid email", () => {
       expect(
-        forgotPasswordSchema.safeParse({ email: "hello@splug.ng" }).success
+        forgotPasswordSchema.safeParse({ email: "hello@slurge.ng" }).success
       ).toBe(true);
     });
 

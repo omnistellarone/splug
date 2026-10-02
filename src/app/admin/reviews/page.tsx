@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Review Moderation — Splug Admin",
+  title: "Review Moderation — Slurge Admin",
   description: "Approve or reject customer product reviews.",
 };
 

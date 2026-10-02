@@ -5,15 +5,15 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 
 export const metadata: Metadata = {
-  title: "Create Account — Splug Electronics",
-  description: "Join Splug Electronics for genuine gadgets, fast Nigerian delivery, and warranty support.",
+  title: "Create Account — Slurge Electronics",
+  description: "Join Slurge Electronics for genuine gadgets, fast Nigerian delivery, and warranty support.",
 };
 
 export default function SignUpPage() {
   return (
     <AuthCard
       title="Create your account"
-      subtitle="Join Splug for authentic electronics and instant warranty"
+      subtitle="Join Slurge for authentic electronics and instant warranty"
       footer={
         <p>
           Already have an account?{" "}

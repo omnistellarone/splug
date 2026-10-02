@@ -73,7 +73,7 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
               <Zap className="h-5 w-5" />
             </div>
             <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-              Splug<span className="text-[var(--primary)]">.</span>
+              Slurge<span className="text-[var(--primary)]">.</span>
             </span>
           </Link>
           <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">

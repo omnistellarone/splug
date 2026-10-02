@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/catalog/product-card";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Splug Electronics — Premium Electronics Store Nigeria",
+  title: "Slurge Electronics — Premium Electronics Store Nigeria",
   description:
     "Shop authentic smartphones, laptops, audio gear, and gaming equipment with warranty support and express nationwide delivery in Nigeria.",
 };

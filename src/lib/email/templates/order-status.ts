@@ -4,7 +4,7 @@ export function renderOrderStatusEmail(
   data: OrderEmailData,
   newStatus: "processing" | "shipped" | "delivered" | "cancelled" | "refunded",
   note?: string,
-  appUrl: string = "https://splug.ng"
+  appUrl: string = "https://slurge.ng"
 ): { html: string; text: string; subject: string } {
   const trackingUrl = `${appUrl}/account/orders/${data.orderId}`;
 
@@ -68,7 +68,7 @@ export function renderOrderStatusEmail(
           <tr>
             <td style="background-color: #09090b; padding: 28px 40px; text-align: center;">
               <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff;">
-                Splug<span style="color: #3b82f6;">.</span>
+                Slurge<span style="color: #3b82f6;">.</span>
               </h1>
             </td>
           </tr>
@@ -121,7 +121,7 @@ export function renderOrderStatusEmail(
           <!-- Footer -->
           <tr>
             <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 40px; text-align: center; font-size: 12px; color: #6b7280;">
-              Questions? Reach out to us at <a href="mailto:support@splug.ng" style="color: #2563eb; text-decoration: none;">support@splug.ng</a>
+              Questions? Reach out to us at <a href="mailto:support@slurge.ng" style="color: #2563eb; text-decoration: none;">support@slurge.ng</a>
             </td>
           </tr>
         </table>
@@ -133,7 +133,7 @@ export function renderOrderStatusEmail(
   `.trim();
 
   const text = `
-SPLUG ELECTRONICS — ORDER STATUS UPDATE
+SLURGE ELECTRONICS — ORDER STATUS UPDATE
 =======================================
 
 Hello ${data.customerName},
@@ -146,7 +146,7 @@ Reference: ${data.paymentReference || data.orderId}
 Delivery to: ${data.shippingAddress.city}, ${data.shippingAddress.state}
 
 View live order: ${trackingUrl}
-Support: support@splug.ng
+Support: support@slurge.ng
   `.trim();
 
   return { html, text, subject };

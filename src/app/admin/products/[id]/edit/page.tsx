@@ -8,7 +8,7 @@ import { getProductForEditAction } from "@/lib/admin/actions";
 import { EditProductForm } from "@/components/admin/edit-product-form";
 
 export const metadata: Metadata = {
-  title: "Edit Product — Splug Admin",
+  title: "Edit Product — Slurge Admin",
   description: "Modify product specifications, price, stock, or imagery.",
 };
 

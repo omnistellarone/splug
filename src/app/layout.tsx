@@ -11,8 +11,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Splug Electronics",
-    default: "Splug Electronics — Premium Electronics Store",
+    template: "%s | Slurge Electronics",
+    default: "Slurge Electronics — Premium Electronics Store",
   },
   description:
     "Shop the latest phones, laptops, audio, gaming gear, and accessories. Fast delivery across Nigeria.",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_NG",
-    siteName: "Splug Electronics",
+    siteName: "Slurge Electronics",
   },
   robots: {
     index: true,

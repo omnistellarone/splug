@@ -364,7 +364,7 @@ export async function initializeCheckoutOrderAction(
   );
 
   // 4. Unique Paystack reference
-  const reference = `splug_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  const reference = `slurge_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
   // 5. Create pending order in Supabase
   const { data: order, error: orderError } = await supabase

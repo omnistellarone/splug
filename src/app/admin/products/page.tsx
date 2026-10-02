@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Products & Inventory — Splug Admin",
+  title: "Products & Inventory — Slurge Admin",
   description: "Manage electronics catalog products and stock levels.",
 };
 

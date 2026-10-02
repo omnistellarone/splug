@@ -25,7 +25,7 @@ function getMailgunConfig() {
     domain,
     from:
       process.env.MAILGUN_FROM_EMAIL ||
-      `Splug Electronics <mailgun@${domain}>`,
+      `Slurge Electronics <mailgun@${domain}>`,
     baseUrl,
   };
 }
@@ -187,10 +187,10 @@ export async function sendEmail(
 export async function sendOrderConfirmation(
   order: OrderEmailData
 ): Promise<SendEmailResult> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://splug.ng";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://slurge.ng";
   const { html, text } = renderOrderConfirmationEmail(order, appUrl);
 
-  const subject = `Order Confirmed: ${order.paymentReference || order.orderNumber} — Splug Electronics`;
+  const subject = `Order Confirmed: ${order.paymentReference || order.orderNumber} — Slurge Electronics`;
 
   return sendEmail({
     to: order.customerEmail,
@@ -210,7 +210,7 @@ export async function sendOrderStatusChanged(
   newStatus: "processing" | "shipped" | "delivered" | "cancelled" | "refunded",
   note?: string
 ): Promise<SendEmailResult> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://splug.ng";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://slurge.ng";
   const { html, text, subject } = renderOrderStatusEmail(
     order,
     newStatus,

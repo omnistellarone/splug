@@ -17,8 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Admin Control Center — Splug Electronics",
-  description: "Secure management console for Splug store operations.",
+  title: "Admin Control Center — Slurge Electronics",
+  description: "Secure management console for Slurge store operations.",
 };
 
 const NAV_LINKS = [
@@ -59,7 +59,7 @@ export default async function AdminLayout({
               <span className="h-8 w-8 rounded-xl bg-gradient-to-tr from-[var(--primary)] to-[var(--accent)] text-white font-black text-sm flex items-center justify-center shadow-md shadow-[var(--primary)]/20">
                 S
               </span>
-              <span>Splug Ops</span>
+              <span>Slurge Ops</span>
             </Link>
             <Badge
               variant="destructive"

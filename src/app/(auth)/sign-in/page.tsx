@@ -5,8 +5,8 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { SignInForm } from "@/components/auth/sign-in-form";
 
 export const metadata: Metadata = {
-  title: "Sign In — Splug Electronics",
-  description: "Sign in to your Splug account to manage your orders, wishlist, and profile.",
+  title: "Sign In — Slurge Electronics",
+  description: "Sign in to your Slurge account to manage your orders, wishlist, and profile.",
 };
 
 interface SignInPageProps {
@@ -29,7 +29,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   return (
     <AuthCard
       title="Welcome back"
-      subtitle="Sign in to your Splug account"
+      subtitle="Sign in to your Slurge account"
       footer={
         <p>
           Don’t have an account?{" "}

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const metadata: Metadata = {
-  title: "Promotional Coupons — Splug Admin",
+  title: "Promotional Coupons — Slurge Admin",
   description: "Create and manage promotional discount coupons.",
 };
 
@@ -56,7 +56,7 @@ export default async function AdminCouponsPage() {
                 id="code"
                 name="code"
                 required
-                placeholder="e.g. SPLUG2026"
+                placeholder="e.g. SLURGE2026"
                 className="uppercase font-mono"
               />
             </div>

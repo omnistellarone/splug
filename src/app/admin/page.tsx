@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Dashboard Overview — Splug Admin",
-  description: "High-level metrics, revenue, and inventory status for Splug Electronics.",
+  title: "Dashboard Overview — Slurge Admin",
+  description: "High-level metrics, revenue, and inventory status for Slurge Electronics.",
 };
 
 export default async function AdminDashboardPage() {

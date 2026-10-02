@@ -4,8 +4,8 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export const metadata: Metadata = {
-  title: "Forgot Password — Splug Electronics",
-  description: "Reset your Splug Electronics account password securely.",
+  title: "Forgot Password — Slurge Electronics",
+  description: "Reset your Slurge Electronics account password securely.",
 };
 
 export default function ForgotPasswordPage() {

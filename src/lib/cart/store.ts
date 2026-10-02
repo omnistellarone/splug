@@ -91,7 +91,7 @@ export const useCartStore = create<CartStoreState>()(
       setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
-      name: "splug_guest_cart",
+      name: "slurge_guest_cart",
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

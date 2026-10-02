@@ -76,7 +76,7 @@ describe("Admin Authorization & Mutation Guards (AGENTS.md §9)", () => {
       auth: {
         getUser: vi.fn().mockResolvedValueOnce({
           data: {
-            user: { id: "admin-user-999", email: "admin@splug.ng" },
+            user: { id: "admin-user-999", email: "admin@slurge.ng" },
           },
         }),
       },

@@ -10,7 +10,7 @@ export default function Loading() {
         </div>
       </div>
       <p className="text-xs font-medium text-[var(--text-muted)] animate-pulse">
-        Loading Splug Electronics…
+        Loading Slurge Electronics…
       </p>
     </div>
   );

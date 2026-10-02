@@ -4,7 +4,7 @@ export function GET() {
   return NextResponse.json(
     {
       status: "ok",
-      service: "splug-electronics",
+      service: "slurge-electronics",
       timestamp: new Date().toISOString(),
     },
     { status: 200 }

@@ -15,7 +15,7 @@ describe("Phase 6: Mailgun Email Service & Templates", () => {
     discountMinor: 2000000, // ₦20,000 promo discount
     totalMinor: 93000000, // ₦930,000
     couponCode: "WELCOME10",
-    paymentReference: "splug_ref_1727800000000_abc123",
+    paymentReference: "slurge_ref_1727800000000_abc123",
     paidAt: "2026-10-01T12:00:00Z",
     shippingAddress: {
       full_name: "Babatunde Adeleke",
@@ -42,16 +42,16 @@ describe("Phase 6: Mailgun Email Service & Templates", () => {
     it("renders valid HTML with recipient name, order reference, and items", () => {
       const { html, text } = renderOrderConfirmationEmail(
         sampleOrder,
-        "https://splug.ng"
+        "https://slurge.ng"
       );
 
       // Verify recipient and branding
       expect(html).toContain("Hello Babatunde Adeleke,");
-      expect(html).toContain("Splug");
+      expect(html).toContain("Slurge");
       expect(html).toContain("Payment Verified & Order Confirmed");
 
       // Verify reference and money formatting
-      expect(html).toContain("splug_ref_1727800000000_abc123");
+      expect(html).toContain("slurge_ref_1727800000000_abc123");
       expect(html).toContain("₦930,000"); // Formatted total
       expect(html).toContain("FREE"); // Free shipping
       expect(html).toContain("WELCOME10"); // Coupon discount
@@ -61,7 +61,7 @@ describe("Phase 6: Mailgun Email Service & Templates", () => {
       expect(html).toContain("256GB • Natural Titanium");
 
       // Verify plain text version
-      expect(text).toContain("SPLUG ELECTRONICS — ORDER CONFIRMATION");
+      expect(text).toContain("SLURGE ELECTRONICS — ORDER CONFIRMATION");
       expect(text).toContain("Hello Babatunde Adeleke,");
       expect(text).toContain("iPhone 16 Pro Max");
       expect(text).toContain("₦930,000");

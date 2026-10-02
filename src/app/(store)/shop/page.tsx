@@ -11,7 +11,7 @@ import { ProductGrid } from "@/components/catalog/product-grid";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Shop All Electronics — Splug Electronics",
+  title: "Shop All Electronics — Slurge Electronics",
   description:
     "Browse authentic smartphones, laptops, audio gear, and gaming consoles with official warranty and nationwide delivery in Nigeria.",
 };

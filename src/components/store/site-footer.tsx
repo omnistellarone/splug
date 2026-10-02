@@ -89,7 +89,7 @@ export function SiteFooter() {
           {/* Brand */}
           <div className="col-span-2 sm:col-span-4 lg:col-span-1">
             <p className="text-2xl font-bold text-white flex items-center gap-1">
-              <span>Splug</span>
+              <span>Slurge</span>
               <span className="text-xs font-semibold opacity-70 tracking-normal align-top -mt-1.5">
                 ®
               </span>
@@ -124,7 +124,7 @@ export function SiteFooter() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} Splug Electronics. All rights reserved.
+            © {new Date().getFullYear()} Slurge Electronics. All rights reserved.
           </p>
           <div className="flex gap-4 text-xs text-white/40">
             <Link href="/privacy" className="hover:text-white transition-colors">

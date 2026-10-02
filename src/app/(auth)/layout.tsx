@@ -17,7 +17,7 @@ export default function AuthLayout({
             <Zap className="h-4 w-4" />
           </div>
           <span className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
-            Splug<span className="text-[var(--primary)]">.</span>
+            Slurge<span className="text-[var(--primary)]">.</span>
           </span>
         </Link>
         <ThemeToggle />

@@ -61,7 +61,7 @@ export function NewProductForm({ categories, brands }: NewProductFormProps) {
 
   const handleGenerateSku = () => {
     const brandObj = brands.find((b) => b.id === brandId);
-    const prefix = (brandObj?.name || "SPLUG").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    const prefix = (brandObj?.name || "SLURGE").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     const namePart = name.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
     const randomSuffix = Math.floor(100 + Math.random() * 900);
     setSku(`${prefix}-${namePart || "PROD"}-${randomSuffix}`);

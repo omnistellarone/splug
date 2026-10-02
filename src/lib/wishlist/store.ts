@@ -33,7 +33,7 @@ export const useWishlistStore = create<WishlistStoreState>()(
       setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
-      name: "splug_guest_wishlist",
+      name: "slurge_guest_wishlist",
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

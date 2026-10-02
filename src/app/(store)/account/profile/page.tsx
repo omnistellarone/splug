@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Profile Settings — Splug Electronics",
+  title: "Profile Settings — Slurge Electronics",
   description: "View and update your personal details and contact information.",
 };
 

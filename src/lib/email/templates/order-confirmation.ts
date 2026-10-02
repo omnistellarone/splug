@@ -3,7 +3,7 @@ import type { OrderEmailData } from "../types";
 
 export function renderOrderConfirmationEmail(
   data: OrderEmailData,
-  appUrl: string = "https://splug.ng"
+  appUrl: string = "https://slurge.ng"
 ): { html: string; text: string } {
   const trackingUrl = `${appUrl}/account/orders/${data.orderId}`;
 
@@ -35,7 +35,7 @@ export function renderOrderConfirmationEmail(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Splug Order is Confirmed</title>
+  <title>Your Slurge Order is Confirmed</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 32px 16px;">
@@ -46,7 +46,7 @@ export function renderOrderConfirmationEmail(
           <tr>
             <td style="background-color: #09090b; padding: 32px 40px; text-align: center;">
               <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-                Splug<span style="color: #3b82f6;">.</span>
+                Slurge<span style="color: #3b82f6;">.</span>
               </h1>
               <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 13px; font-weight: 500;">
                 Premium Electronics & Certified Gadgets
@@ -67,7 +67,7 @@ export function renderOrderConfirmationEmail(
                 Hello ${data.customerName},
               </h2>
               <p style="margin: 0 0 20px 0; font-size: 14px; color: #4b5563; line-height: 1.6;">
-                Thank you for choosing Splug. We’ve received your payment and our warehouse team is preparing your brand-new electronics for dispatch.
+                Thank you for choosing Slurge. We’ve received your payment and our warehouse team is preparing your brand-new electronics for dispatch.
               </p>
 
               <!-- Order Details Meta -->
@@ -146,7 +146,7 @@ export function renderOrderConfirmationEmail(
                 All products include 1-Year Official Manufacturer Warranty and 7-day fault return policy.
               </p>
               <p style="margin: 0;">
-                Need help? Contact us anytime at <a href="mailto:support@splug.ng" style="color: #2563eb; text-decoration: none;">support@splug.ng</a>
+                Need help? Contact us anytime at <a href="mailto:support@slurge.ng" style="color: #2563eb; text-decoration: none;">support@slurge.ng</a>
               </p>
             </td>
           </tr>
@@ -160,7 +160,7 @@ export function renderOrderConfirmationEmail(
 
   // Plain-text equivalent
   const text = `
-SPLUG ELECTRONICS — ORDER CONFIRMATION
+SLURGE ELECTRONICS — ORDER CONFIRMATION
 =======================================
 
 Hello ${data.customerName},
@@ -185,7 +185,7 @@ Phone: ${data.shippingAddress.phone}
 
 Track your order: ${trackingUrl}
 
-Support: support@splug.ng
+Support: support@slurge.ng
   `.trim();
 
   return { html, text };

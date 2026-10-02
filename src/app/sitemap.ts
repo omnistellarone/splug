@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getCategories, getProducts } from "@/lib/catalog/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://splug.ng";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://slurge.ng";
 
   // Static core routes
   const staticRoutes: MetadataRoute.Sitemap = [

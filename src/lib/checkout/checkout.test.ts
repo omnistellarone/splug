@@ -95,7 +95,7 @@ describe("Phase 5: Checkout & Payment Integrity", () => {
       const payload = JSON.stringify({
         event: "charge.success",
         data: {
-          reference: "splug_1727801234567_abc",
+          reference: "slurge_1727801234567_abc",
           amount: 54000000,
           status: "success",
         },
@@ -111,7 +111,7 @@ describe("Phase 5: Checkout & Payment Integrity", () => {
     it("rejects forged or modified webhook payload", () => {
       const legitimatePayload = JSON.stringify({
         event: "charge.success",
-        data: { reference: "splug_1727801234567_abc", amount: 54000000 },
+        data: { reference: "slurge_1727801234567_abc", amount: 54000000 },
       });
 
       const forgedSignature = createHmac("sha512", testSecret)
@@ -120,7 +120,7 @@ describe("Phase 5: Checkout & Payment Integrity", () => {
 
       const modifiedPayload = JSON.stringify({
         event: "charge.success",
-        data: { reference: "splug_1727801234567_abc", amount: 1000 }, // altered amount
+        data: { reference: "slurge_1727801234567_abc", amount: 1000 }, // altered amount
       });
 
       expect(verifyPaystackSignature(modifiedPayload, forgedSignature, testSecret)).toBe(false);

@@ -34,11 +34,11 @@ export async function generateMetadata({
   const category = categories.find((c) => c.slug === slug);
 
   if (!category) {
-    return { title: "Category Not Found — Splug" };
+    return { title: "Category Not Found — Slurge" };
   }
 
   return {
-    title: `${category.name} in Nigeria — Splug Electronics`,
+    title: `${category.name} in Nigeria — Slurge Electronics`,
     description: `Shop authentic ${category.name.toLowerCase()} with official manufacturer warranty and express shipping across Nigeria.`,
   };
 }

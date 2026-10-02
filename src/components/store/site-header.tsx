@@ -60,16 +60,16 @@ export function SiteHeader() {
         style={{ height: "68px" }}
       >
         <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-4 md:px-6 lg:px-10">
-          {/* Brand Logo matching Image 3 (Splug ®) */}
+          {/* Brand Logo matching Image 3 (Slurge ®) */}
           <Link
             href="/"
             className={cn(
               "flex-shrink-0 text-xl font-bold tracking-tight transition-colors duration-200 flex items-center gap-1",
               isHomeHero ? "text-white" : "text-slate-950 dark:text-white"
             )}
-            aria-label="Splug — Home"
+            aria-label="Slurge — Home"
           >
-            <span>Splug</span>
+            <span>Slurge</span>
             <span className="text-[11px] font-semibold opacity-75 tracking-normal align-top -mt-1.5">
               ®
             </span>

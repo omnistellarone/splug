@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Orders Management — Splug Admin",
+  title: "Orders Management — Slurge Admin",
   description: "View and fulfill customer electronics orders.",
 };
 

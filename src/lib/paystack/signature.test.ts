@@ -7,7 +7,7 @@ describe("Paystack Webhook Signature Verification", () => {
   const rawBody = JSON.stringify({
     event: "charge.success",
     data: {
-      reference: "splug_ord_1727800000000_abc123",
+      reference: "slurge_ord_1727800000000_abc123",
       amount: 15000000,
       currency: "NGN",
       status: "success",
@@ -39,7 +39,7 @@ describe("Paystack Webhook Signature Verification", () => {
     const tamperedBody = JSON.stringify({
       event: "charge.success",
       data: {
-        reference: "splug_ord_1727800000000_abc123",
+        reference: "slurge_ord_1727800000000_abc123",
         amount: 500000, // attacker tried reducing amount
         currency: "NGN",
         status: "success",

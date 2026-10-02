@@ -6,7 +6,7 @@ import { getCategories, getBrands } from "@/lib/catalog/queries";
 import { NewProductForm } from "@/components/admin/new-product-form";
 
 export const metadata: Metadata = {
-  title: "Add New Product — Splug Admin",
+  title: "Add New Product — Slurge Admin",
   description: "Create a new electronics product listing and initial variant.",
 };
 

@@ -28,7 +28,7 @@ export function HeroSection() {
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      aria-label="Welcome to Splug — Tomorrow's Tech Today"
+      aria-label="Welcome to Slurge — Tomorrow's Tech Today"
       className="relative overflow-hidden bg-[#08090D] text-white min-h-[600px] lg:min-h-[660px] flex items-center pt-8 pb-16 sm:py-16 lg:py-20"
     >
       {/* ── Background Technical Dot Mesh (Image 3) ── */}
@@ -97,7 +97,7 @@ export function HeroSection() {
 
             {/* Subtitle */}
             <p className="mt-5 text-sm sm:text-base md:text-lg text-slate-300/85 leading-relaxed font-normal max-w-[560px]">
-              Step into tomorrow&apos;s tech world with Splug: your go-to hub for
+              Step into tomorrow&apos;s tech world with Slurge: your go-to hub for
               cutting-edge phones and electronics at prices that can&apos;t be beat.
             </p>
 
@@ -127,7 +127,7 @@ export function HeroSection() {
                 href="/shop"
                 className="group relative inline-flex items-center justify-center rounded-xl bg-white px-6 sm:px-7 py-3.5 text-sm font-semibold text-slate-950 shadow-xl shadow-black/25 hover:bg-slate-100 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-white/20"
               >
-                <span>Start Shopping at Splug Today</span>
+                <span>Start Shopping at Slurge Today</span>
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>

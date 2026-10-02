@@ -4,8 +4,8 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 
 export const metadata: Metadata = {
-  title: "Set New Password — Splug Electronics",
-  description: "Set a new password for your Splug Electronics account.",
+  title: "Set New Password — Slurge Electronics",
+  description: "Set a new password for your Slurge Electronics account.",
 };
 
 export default function ResetPasswordPage() {

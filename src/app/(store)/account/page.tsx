@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "My Account — Splug Electronics",
+  title: "My Account — Slurge Electronics",
   description: "Manage your profile, shipping addresses, and past electronics orders.",
 };
 

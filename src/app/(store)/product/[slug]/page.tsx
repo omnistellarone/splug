@@ -25,11 +25,11 @@ export async function generateMetadata({
   const product = await getProductBySlug(slug);
 
   if (!product) {
-    return { title: "Product Not Found — Splug" };
+    return { title: "Product Not Found — Slurge" };
   }
 
   return {
-    title: product.meta_title || `${product.name} — Splug Electronics`,
+    title: product.meta_title || `${product.name} — Slurge Electronics`,
     description: product.meta_description || product.description,
     openGraph: {
       title: product.name,
@@ -139,7 +139,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           <div className="rounded-2xl p-6 liquid-glass border border-[var(--glass-border)] space-y-3">
             <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[var(--primary)]" />
-              <span>Splug Genuine Guarantee</span>
+              <span>Slurge Genuine Guarantee</span>
             </h3>
             <ul className="text-xs sm:text-sm text-[var(--text-secondary)] space-y-2">
               <li className="flex items-start gap-2">

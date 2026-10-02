@@ -28,7 +28,7 @@ export async function generateMetadata({
 }: OrderDetailPageProps): Promise<Metadata> {
   const { id } = await params;
   return {
-    title: `Order Details #${id.substring(0, 8).toUpperCase()} — Splug`,
+    title: `Order Details #${id.substring(0, 8).toUpperCase()} — Slurge`,
   };
 }
 

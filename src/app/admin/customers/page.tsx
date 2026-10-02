@@ -6,7 +6,7 @@ import { formatMoney } from "@/lib/money";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Customers Directory — Splug Admin",
+  title: "Customers Directory — Slurge Admin",
   description: "View registered customer accounts, order history, and lifetime spend.",
 };
 
