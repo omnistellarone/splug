@@ -85,9 +85,23 @@ describe("calculateCartTotals", () => {
     expect(totals.amountNeededForFreeShippingMinor).toBe(0);
   });
 
-  it("calculates amount needed for free shipping when under threshold", () => {
-    const items = [{ ...mockItemB, quantity: 1 }]; // ₦480,000 (< ₦1,000,000 threshold)
-    const totals = calculateCartTotals(items);
+  it("calculates amount needed for free shipping when under default threshold", () => {
+    const cheapItem: CartItem = {
+      ...mockItemB,
+      priceMinor: 6000000, // ₦60,000 (< ₦100,000 default threshold)
+      quantity: 1,
+    };
+    const totals = calculateCartTotals([cheapItem]);
+
+    expect(totals.subtotalMinor).toBe(6000000);
+    expect(totals.itemCount).toBe(1);
+    expect(totals.qualifiesForFreeShipping).toBe(false);
+    expect(totals.amountNeededForFreeShippingMinor).toBe(4000000); // ₦40,000 needed
+  });
+
+  it("calculates amount needed with custom admin threshold", () => {
+    const items = [{ ...mockItemB, quantity: 1 }]; // ₦480,000 (< ₦1,000,000 custom threshold)
+    const totals = calculateCartTotals(items, 100000000); // ₦1,000,000 custom threshold
 
     expect(totals.subtotalMinor).toBe(48000000);
     expect(totals.itemCount).toBe(1);
@@ -100,6 +114,6 @@ describe("calculateCartTotals", () => {
     expect(totals.subtotalMinor).toBe(0);
     expect(totals.itemCount).toBe(0);
     expect(totals.qualifiesForFreeShipping).toBe(false);
-    expect(totals.amountNeededForFreeShippingMinor).toBe(100000000);
+    expect(totals.amountNeededForFreeShippingMinor).toBe(10000000); // default ₦100,000
   });
 });

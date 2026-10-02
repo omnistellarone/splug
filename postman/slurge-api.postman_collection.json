@@ -1,0 +1,481 @@
+{
+  "info": {
+    "_postman_id": "7d9b231c-slurge-ecom-4f1a-b892-mobile-api",
+    "name": "Slurge Electronics Mobile & Storefront API",
+    "description": "Comprehensive REST API collection for building Slurge Mobile Apps (React Native, Flutter, iOS, Android) and third-party integrations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "https://splug-teal.vercel.app",
+      "type": "string"
+    },
+    {
+      "key": "SUPABASE_URL",
+      "value": "https://pznkofhgbxydzcbemzfe.supabase.co",
+      "type": "string"
+    },
+    {
+      "key": "SUPABASE_ANON_KEY",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "type": "string"
+    },
+    {
+      "key": "AUTH_TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Store & Settings",
+      "item": [
+        {
+          "name": "Get Store Operational Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/settings",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "settings"]
+            },
+            "description": "Returns store operational settings including free shipping threshold minor units (kobo), currency, and customer service details."
+          }
+        },
+        {
+          "name": "Update Free Delivery Threshold (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"freeShippingThresholdNaira\": 100000\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/settings",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "settings"]
+            },
+            "description": "Allows an authenticated admin to set the free delivery threshold in Naira (₦)."
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/health",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication (Supabase Auth)",
+      "item": [
+        {
+          "name": "Sign Up with Email & Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_ANON_KEY}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"data\": {\n    \"full_name\": \"Emeka Okafor\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/signup",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "signup"]
+            },
+            "description": "Registers a new customer account. Creates user row and default profile."
+          }
+        },
+        {
+          "name": "Sign In with Email & Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "  pm.collectionVariables.set('AUTH_TOKEN', json.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_ANON_KEY}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/token?grant_type=password",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "token"],
+              "query": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "description": "Authenticates customer credentials and saves the JWT access token into {{AUTH_TOKEN}}."
+          }
+        },
+        {
+          "name": "Get Authenticated User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_ANON_KEY}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/user",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "user"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Catalog & Products",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/categories",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Fetches all active electronics categories (Phones, Laptops, Audio, Gaming, etc.)."
+          }
+        },
+        {
+          "name": "Get Products (Paginated & Filtered)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/products?page=1&limit=20&category=phones&sort=price_asc",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "category",
+                  "value": "phones"
+                },
+                {
+                  "key": "sort",
+                  "value": "price_asc"
+                }
+              ]
+            },
+            "description": "Query parameters: page, limit, category (slug), q (search), minPrice (kobo), maxPrice (kobo), sort (featured | price_asc | price_desc | newest)."
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/products?q=iphone",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "products"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "iphone"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Product by Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/products/iphone-16-pro-max",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "products", "iphone-16-pro-max"]
+            },
+            "description": "Fetches complete product details with all active variants, image gallery, specs, stock levels, and related products."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Shopping Cart",
+      "item": [
+        {
+          "name": "Get User Cart & Totals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/cart",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "cart"]
+            },
+            "description": "Retrieves the authenticated user's persistent database cart along with free shipping calculation."
+          }
+        },
+        {
+          "name": "Add or Update Cart Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"variantId\": \"fa5cae6f-4d9f-43f1-b95c-9c9dc75fa3d8\",\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/cart",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "cart"]
+            },
+            "description": "Adds or updates the quantity of a specific product variant in the user's persistent cart."
+          }
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"variantId\": \"fa5cae6f-4d9f-43f1-b95c-9c9dc75fa3d8\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/cart",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "cart"]
+            }
+          }
+        },
+        {
+          "name": "Clear Entire Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clearAll\": true\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/cart",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "cart"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Checkout & Coupons",
+      "item": [
+        {
+          "name": "Validate Coupon Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"subtotalMinor\": 25000000\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/coupons/validate",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "coupons", "validate"]
+            },
+            "description": "Calculates discount minor amount for a given coupon code and subtotal."
+          }
+        },
+        {
+          "name": "Initialize Checkout & Paystack Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"variantId\": \"fa5cae6f-4d9f-43f1-b95c-9c9dc75fa3d8\",\n      \"productId\": \"1369cf16-86d1-44aa-9cbf-25c7e11f1585\",\n      \"productName\": \"iPhone 16 Pro Max\",\n      \"variantSku\": \"IP16PM-256-NAT\",\n      \"variantOptions\": {\"storage\": \"256GB\", \"color\": \"Natural Titanium\"},\n      \"priceMinor\": 235000000,\n      \"quantity\": 1,\n      \"maxStock\": 15\n    }\n  ],\n  \"shippingAddress\": {\n    \"full_name\": \"Emeka Okafor\",\n    \"phone\": \"+2348012345678\",\n    \"address_line1\": \"12 Admiralty Way, Lekki Phase 1\",\n    \"city\": \"Lekki\",\n    \"state\": \"Lagos\",\n    \"postal_code\": \"105102\"\n  },\n  \"couponCode\": \"WELCOME10\",\n  \"notes\": \"Deliver during business hours\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/checkout",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "checkout"]
+            },
+            "description": "Creates a pending order, locks price snapshots, generates payment reference, and returns authorizationUrl to open in Mobile WebView."
+          }
+        },
+        {
+          "name": "Verify Paystack Payment Reference",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/payments/paystack/verify?reference=slurge_ref_example",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "payments", "paystack", "verify"],
+              "query": [
+                {
+                  "key": "reference",
+                  "value": "slurge_ref_example"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Orders History",
+      "item": [
+        {
+          "name": "Get Customer Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/orders",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Fetches all past orders and line items for the logged-in user."
+          }
+        },
+        {
+          "name": "Get Single Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/orders/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order-uuid-here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -19,4 +19,5 @@ export interface CartTotals {
   qualifiesForFreeShipping: boolean;
 }
 
-export const FREE_SHIPPING_THRESHOLD_MINOR = 100000000; // ₦1,000,000 (1 million Naira)
+export const DEFAULT_FREE_SHIPPING_THRESHOLD_MINOR = 10000000; // ₦100,000 (100k Naira default, configurable by admin)
+export const FREE_SHIPPING_THRESHOLD_MINOR = DEFAULT_FREE_SHIPPING_THRESHOLD_MINOR;

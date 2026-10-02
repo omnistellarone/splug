@@ -53,20 +53,17 @@ export function SiteHeader() {
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
           isHomeHero
-            ? "bg-transparent border-b border-transparent text-white"
-            : "bg-white/92 dark:bg-[#080A0F]/92 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs text-slate-900 dark:text-white",
+            ? "bg-white/90 dark:bg-transparent border-b border-slate-200/80 dark:border-transparent text-slate-900 dark:text-white backdrop-blur-xl dark:backdrop-blur-none"
+            : "bg-white/95 dark:bg-[#080A0F]/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs text-slate-900 dark:text-white",
           scrolled && "shadow-md"
         )}
         style={{ height: "68px" }}
       >
         <div className="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-4 md:px-6 lg:px-10">
-          {/* Brand Logo matching Image 3 (Slurge ®) */}
+          {/* Brand Logo */}
           <Link
             href="/"
-            className={cn(
-              "flex-shrink-0 text-xl font-bold tracking-tight transition-colors duration-200 flex items-center gap-1",
-              isHomeHero ? "text-white" : "text-slate-950 dark:text-white"
-            )}
+            className="flex-shrink-0 text-xl font-bold tracking-tight transition-colors duration-200 flex items-center gap-1 text-slate-950 dark:text-white"
             aria-label="Slurge — Home"
           >
             <span>Slurge</span>
@@ -82,7 +79,7 @@ export function SiteHeader() {
                 size={16}
                 className={cn(
                   "absolute left-3.5 top-1/2 -translate-y-1/2",
-                  isHomeHero ? "text-white/60" : "text-slate-400 dark:text-slate-500"
+                  isHomeHero ? "text-slate-400 dark:text-white/60" : "text-slate-400 dark:text-slate-500"
                 )}
                 aria-hidden
               />
@@ -95,8 +92,8 @@ export function SiteHeader() {
                 className={cn(
                   "w-full rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm font-medium transition-all duration-200",
                   isHomeHero
-                    ? "bg-white/10 border border-white/20 text-white placeholder:text-white/60 focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20"
-                    : "bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-950 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20",
+                    ? "bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/60 focus:bg-white dark:focus:bg-white/15 focus:border-[var(--primary)] dark:focus:border-white/40 focus:ring-2 focus:ring-[var(--primary)]/20 dark:focus:ring-white/20"
+                    : "bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20",
                   "focus:outline-none"
                 )}
               />
@@ -112,8 +109,8 @@ export function SiteHeader() {
                 className={cn(
                   "px-3.5 py-1.5 text-sm font-medium rounded-lg transition-colors duration-150",
                   isHomeHero
-                    ? "text-white/80 hover:text-white hover:bg-white/10"
-                    : "text-slate-700 dark:text-slate-200 hover:text-[var(--primary)] hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                    ? "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-white/80 dark:hover:text-white dark:hover:bg-white/10"
+                    : "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-slate-200 dark:hover:text-white dark:hover:bg-slate-800/80"
                 )}
               >
                 {link.label}
@@ -125,8 +122,7 @@ export function SiteHeader() {
           <div className="ml-auto flex items-center gap-1.5">
             <ThemeToggle
               className={cn(
-                isHomeHero &&
-                  "text-white hover:bg-white/10 hover:text-white focus-visible:outline-white"
+                "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
               )}
             />
 
@@ -135,9 +131,7 @@ export function SiteHeader() {
               aria-label="Wishlist"
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-lg transition-colors duration-150",
-                isHomeHero
-                  ? "text-white hover:bg-white/10"
-                  : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
+                "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-white/10"
               )}
             >
               <Heart size={18} strokeWidth={1.75} />
@@ -146,20 +140,18 @@ export function SiteHeader() {
             {/* Cart Trigger */}
             <CartTrigger
               className={cn(
-                isHomeHero &&
-                  "text-white hover:bg-white/10 hover:text-white"
+                "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-white/10"
               )}
             />
 
             {/* User Account Navigation */}
             <UserNav
               className={cn(
-                isHomeHero &&
-                  "text-white hover:bg-white/10 hover:text-white"
+                "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-white/10"
               )}
             />
 
-            {/* Mobile Menu Toggle (Matches hamburger in Image 3) */}
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileOpen((o) => !o)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -167,9 +159,7 @@ export function SiteHeader() {
               aria-controls="mobile-nav"
               className={cn(
                 "flex lg:hidden h-9 w-9 items-center justify-center rounded-lg transition-colors duration-150",
-                isHomeHero
-                  ? "text-white hover:bg-white/10"
-                  : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[var(--primary)]"
+                "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-white dark:hover:bg-white/10"
               )}
             >
               {mobileOpen ? (

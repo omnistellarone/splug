@@ -488,3 +488,86 @@ export const Send = createIcon("Send", () => (
 export const MessageSquare = createIcon("MessageSquare", () => (
   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z" />
 ));
+
+// 11. Category Hardware & Accessories (SVG Repo — Solar / Modern Tech)
+export const Smartphone = createIcon("Smartphone", () => (
+  <>
+    <rect x="5" y="2.5" width="14" height="19" rx="3" />
+    <path d="M11 5.5h2" />
+    <circle cx="12" cy="18" r="0.75" fill="currentColor" stroke="none" />
+  </>
+));
+
+export const Laptop = createIcon("Laptop", () => (
+  <>
+    <rect x="3.5" y="4.5" width="17" height="11.5" rx="2" />
+    <path d="M1.5 19.5h21a1.5 1.5 0 0 1-1.5 1.5H3a1.5 1.5 0 0 1-1.5-1.5Z" />
+    <path d="M10 16h4" />
+  </>
+));
+
+export const Gamepad = createIcon("Gamepad", () => (
+  <>
+    <path d="M6 12h4m-2-2v4m7-2h.01m3 0h.01" />
+    <path d="M6.5 6h11A4.5 4.5 0 0 1 22 10.5v3a4.5 4.5 0 0 1-7.5 3.3L12 15l-2.5 1.8A4.5 4.5 0 0 1 2 13.5v-3A4.5 4.5 0 0 1 6.5 6Z" />
+  </>
+));
+
+export const SmartHome = createIcon("SmartHome", () => (
+  <>
+    <path d="m3 10 9-7 9 7v9.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 19.5V10Z" />
+    <path d="M9 22v-5a3 3 0 0 1 6 0v5" />
+    <path d="M12 9v2m-2-1h4" />
+  </>
+));
+
+export const Plug = createIcon("Plug", () => (
+  <>
+    <path d="M8 2v4m8-4v4M5 6h14a1 1 0 0 1 1 1v3a6 6 0 0 1-6 6v3a2 2 0 0 1-2 2h0a2 2 0 0 1-2-2v-3a6 6 0 0 1-6-6V7a1 1 0 0 1 1-1Z" />
+  </>
+));
+
+export const Tablet = createIcon("Tablet", () => (
+  <>
+    <rect x="4" y="2.5" width="16" height="19" rx="2.5" />
+    <circle cx="12" cy="18" r="0.75" fill="currentColor" stroke="none" />
+  </>
+));
+
+export const Camera = createIcon("Camera", () => (
+  <>
+    <path d="M14.5 4h-5L7.5 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.5L14.5 4Z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </>
+));
+
+export const Watch = createIcon("Watch", () => (
+  <>
+    <rect x="6" y="5.5" width="12" height="13" rx="3.5" />
+    <path d="M9 2.5h6v3H9zm0 16h6v3H9z" />
+    <path d="M12 9v3l2 1" />
+  </>
+));
+
+export const Wifi = createIcon("Wifi", () => (
+  <>
+    <path d="M5 8.5a10 10 0 0 1 14 0m-11.5 3.5a6 6 0 0 1 9 0m-6.5 3.5a2.5 2.5 0 0 1 4 0" />
+    <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
+  </>
+));
+
+export const Cpu = createIcon("Cpu", () => (
+  <>
+    <rect x="5.5" y="5.5" width="13" height="13" rx="2" />
+    <rect x="8.5" y="8.5" width="7" height="7" rx="1" />
+    <path d="M9 2v3.5m6-3.5v3.5M9 18.5V22m6-3.5V22M2 9h3.5m-3.5 6h3.5m13-6H22m-3.5 6H22" />
+  </>
+));
+
+export const Settings = createIcon("Settings", () => (
+  <>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+  </>
+));
+

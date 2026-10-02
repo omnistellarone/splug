@@ -61,7 +61,10 @@ export function mergeCarts(
 /**
  * Calculate totals and free shipping progress
  */
-export function calculateCartTotals(items: CartItem[]): CartTotals {
+export function calculateCartTotals(
+  items: CartItem[],
+  customThresholdMinor?: number
+): CartTotals {
   let subtotalMinor = 0;
   let itemCount = 0;
 
@@ -72,12 +75,17 @@ export function calculateCartTotals(items: CartItem[]): CartTotals {
     }
   }
 
-  const amountNeeded = Math.max(0, FREE_SHIPPING_THRESHOLD_MINOR - subtotalMinor);
+  const threshold =
+    typeof customThresholdMinor === "number" && customThresholdMinor > 0
+      ? customThresholdMinor
+      : FREE_SHIPPING_THRESHOLD_MINOR;
+
+  const amountNeeded = Math.max(0, threshold - subtotalMinor);
 
   return {
     subtotalMinor,
     itemCount,
-    freeShippingThresholdMinor: FREE_SHIPPING_THRESHOLD_MINOR,
+    freeShippingThresholdMinor: threshold,
     amountNeededForFreeShippingMinor: amountNeeded,
     qualifiesForFreeShipping: amountNeeded === 0,
   };

@@ -19,10 +19,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity } =
-    useCartStore();
+  const {
+    items,
+    isOpen,
+    closeCart,
+    removeItem,
+    updateQuantity,
+    freeShippingThresholdMinor,
+  } = useCartStore();
 
-  const totals = calculateCartTotals(items);
+  const totals = calculateCartTotals(items, freeShippingThresholdMinor);
 
   // Close on Escape key
   React.useEffect(() => {

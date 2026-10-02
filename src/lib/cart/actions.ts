@@ -145,3 +145,59 @@ export async function syncItemToDatabaseAction(
     );
   }
 }
+
+/**
+ * Synchronize all current cart items to database (signed-in user)
+ */
+export async function syncCartToDatabaseAction(
+  items: CartItem[]
+): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  if (items.length === 0) {
+    await supabase.from("cart_items").delete().eq("user_id", user.id);
+    return;
+  }
+
+  const validVariantIds = items.map((i) => i.variantId);
+
+  // Delete removed items
+  const { data: existingRows } = await supabase
+    .from("cart_items")
+    .select("variant_id")
+    .eq("user_id", user.id);
+
+  if (existingRows) {
+    const toDelete = existingRows
+      .filter((r) => !validVariantIds.includes(r.variant_id))
+      .map((r) => r.variant_id);
+
+    if (toDelete.length > 0) {
+      await supabase
+        .from("cart_items")
+        .delete()
+        .eq("user_id", user.id)
+        .in("variant_id", toDelete);
+    }
+  }
+
+  // Upsert all current items
+  for (const item of items) {
+    if (item.quantity > 0) {
+      await supabase.from("cart_items").upsert(
+        {
+          user_id: user.id,
+          variant_id: item.variantId,
+          quantity: item.quantity,
+        },
+        { onConflict: "user_id,variant_id" }
+      );
+    }
+  }
+}
+

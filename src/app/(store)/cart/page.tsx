@@ -20,11 +20,12 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity } = useCartStore();
+  const { items, removeItem, updateQuantity, freeShippingThresholdMinor } =
+    useCartStore();
   const [couponCode, setCouponCode] = React.useState("");
   const [couponMessage, setCouponMessage] = React.useState<string | null>(null);
 
-  const totals = calculateCartTotals(items);
+  const totals = calculateCartTotals(items, freeShippingThresholdMinor);
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();

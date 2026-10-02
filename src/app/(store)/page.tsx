@@ -1,6 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Sparkles, ShieldCheck, Zap, Truck, Headphones } from "@/components/ui/icons";
+import {
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  Zap,
+  Truck,
+  Headphones,
+  Smartphone,
+  Laptop,
+  Gamepad,
+  SmartHome,
+  Plug,
+  Tablet,
+  Camera,
+  Watch,
+  Wifi,
+} from "@/components/ui/icons";
 import { HeroSection } from "@/components/store/hero-section";
 import { getFeaturedProducts, getCategories } from "@/lib/catalog/queries";
 import { ProductCard } from "@/components/catalog/product-card";
@@ -13,17 +29,20 @@ export const metadata: Metadata = {
     "Shop authentic smartphones, laptops, audio gear, and gaming equipment with warranty support and express nationwide delivery in Nigeria.",
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-  phones: "📱",
-  laptops: "💻",
-  audio: "🎧",
-  gaming: "🎮",
-  "smart-home": "🏠",
-  accessories: "🔌",
-  tablets: "📟",
-  cameras: "📷",
-  wearables: "⌚",
-  networking: "📡",
+const CATEGORY_COMPONENTS: Record<
+  string,
+  React.ComponentType<{ className?: string; size?: number }>
+> = {
+  phones: Smartphone,
+  laptops: Laptop,
+  audio: Headphones,
+  gaming: Gamepad,
+  "smart-home": SmartHome,
+  accessories: Plug,
+  tablets: Tablet,
+  cameras: Camera,
+  wearables: Watch,
+  networking: Wifi,
 };
 
 export default async function HomePage() {
@@ -64,16 +83,16 @@ export default async function HomePage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           {categories.slice(0, 6).map((cat) => {
-            const emoji = CATEGORY_ICONS[cat.slug] || "⚡";
+            const IconComponent = CATEGORY_COMPONENTS[cat.slug] || Zap;
             return (
               <Link
                 key={cat.id}
                 href={`/category/${cat.slug}`}
-                className="flex flex-col items-center gap-3 p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] transition-all duration-200 hover:border-[var(--primary)] hover:shadow-lg hover:shadow-[var(--primary)]/5 hover:-translate-y-1 group"
+                className="flex flex-col items-center gap-3.5 p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] transition-all duration-200 hover:border-[var(--primary)] hover:shadow-lg hover:shadow-[var(--primary)]/10 hover:-translate-y-1 group"
               >
-                <span className="text-3xl sm:text-4xl group-hover:scale-110 transition-transform">
-                  {emoji}
-                </span>
+                <div className="h-14 w-14 rounded-2xl bg-[var(--surface-subtle)] text-[var(--primary)] flex items-center justify-center border border-[var(--border)] group-hover:bg-[var(--primary-soft)] group-hover:scale-105 transition-all duration-200 shadow-xs">
+                  <IconComponent className="h-7 w-7 transition-colors" />
+                </div>
                 <span className="text-xs sm:text-sm font-semibold text-[var(--text-secondary)] group-hover:text-[var(--primary)] transition-colors text-center">
                   {cat.name}
                 </span>

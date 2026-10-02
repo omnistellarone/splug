@@ -10,6 +10,7 @@ import {
   Ticket,
   MessageSquare,
   ArrowLeft,
+  Settings,
 } from "@/components/ui/icons";
 import { getCurrentUserSession } from "@/lib/auth/session";
 import { signOutAction } from "@/lib/auth/actions";
@@ -28,6 +29,7 @@ const NAV_LINKS = [
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquare },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export default async function AdminLayout({

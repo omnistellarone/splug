@@ -8,6 +8,7 @@ interface CartStoreState {
   items: CartItem[];
   isOpen: boolean;
   hasHydrated: boolean;
+  freeShippingThresholdMinor: number;
 
   openCart: () => void;
   closeCart: () => void;
@@ -21,6 +22,7 @@ interface CartStoreState {
   clearCart: () => void;
   setItems: (items: CartItem[]) => void;
   setHasHydrated: (state: boolean) => void;
+  setFreeShippingThresholdMinor: (minor: number) => void;
 }
 
 export const useCartStore = create<CartStoreState>()(
@@ -29,6 +31,7 @@ export const useCartStore = create<CartStoreState>()(
       items: [],
       isOpen: false,
       hasHydrated: false,
+      freeShippingThresholdMinor: 10000000, // ₦100,000 default (admin configurable)
 
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
@@ -86,9 +89,21 @@ export const useCartStore = create<CartStoreState>()(
         }));
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => {
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("slurge_guest_cart");
+            localStorage.removeItem("splug_guest_cart");
+          } catch {
+            // ignore
+          }
+        }
+        set({ items: [] });
+      },
       setItems: (items) => set({ items }),
       setHasHydrated: (state) => set({ hasHydrated: state }),
+      setFreeShippingThresholdMinor: (minor) =>
+        set({ freeShippingThresholdMinor: Math.max(0, minor) }),
     }),
     {
       name: "slurge_guest_cart",
