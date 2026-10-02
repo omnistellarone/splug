@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Heart, Star, ShoppingBag, Check } from "lucide-react";
+import { Heart, Star, ShoppingBag, Check } from "@/components/ui/icons";
 import { formatMoney } from "@/lib/money";
 import type { ProductWithDetails } from "@/lib/catalog/types";
 import { useCartStore } from "@/lib/cart/store";

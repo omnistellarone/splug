@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, CheckCircle2 } from "@/components/ui/icons";
 import { signUpAction } from "@/lib/auth/actions";
 import { GoogleSignInButton } from "./google-sign-in-button";
 import { Input } from "@/components/ui/input";

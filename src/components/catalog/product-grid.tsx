@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PackageSearch } from "lucide-react";
+import { PackageSearch } from "@/components/ui/icons";
 import type { ProductWithDetails } from "@/lib/catalog/types";
 import { ProductCard } from "./product-card";
 import { Button } from "@/components/ui/button";

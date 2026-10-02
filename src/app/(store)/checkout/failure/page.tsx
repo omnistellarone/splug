@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, RefreshCw, ShoppingCart, HelpCircle } from "lucide-react";
+import { AlertTriangle, RefreshCw, ShoppingCart, HelpCircle } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 
 function CheckoutFailureContent() {

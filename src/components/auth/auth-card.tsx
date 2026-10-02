@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Zap } from "@/components/ui/icons";
 
 interface AuthCardProps {
   title: string;

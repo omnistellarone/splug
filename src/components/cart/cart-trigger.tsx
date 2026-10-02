@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "@/components/ui/icons";
 import { useCartStore } from "@/lib/cart/store";
 import { cn } from "@/lib/utils";
 

@@ -2,7 +2,7 @@ import * as React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { ChevronRight, ShieldCheck, CheckCircle2 } from "@/components/ui/icons";
 import { getProductBySlug, getRelatedProducts } from "@/lib/catalog/queries";
 import { ProductGallery } from "@/components/catalog/product-gallery";
 import { VariantSelector } from "@/components/catalog/variant-selector";

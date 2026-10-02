@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Truck, RefreshCcw, BadgeCheck } from "lucide-react";
+import { ShieldCheck, Truck, RefreshCcw, BadgeCheck } from "@/components/ui/icons";
 
 const FOOTER_LINKS = {
   Shop: [

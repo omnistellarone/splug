@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { Metadata } from "next";
-import { Ticket } from "lucide-react";
+import { Ticket } from "@/components/ui/icons";
 import {
   getAdminCouponsAction,
   createCouponAction,

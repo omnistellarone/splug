@@ -8,7 +8,7 @@ import {
   CreditCard,
   Send,
   Calendar,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateOrderStatusAction } from "@/lib/admin/actions";

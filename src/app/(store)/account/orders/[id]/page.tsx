@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   Clock,
   Package,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { getCurrentUserSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/money";

@@ -2,7 +2,7 @@ import * as React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@/components/ui/icons";
 import { getCategories, getBrands } from "@/lib/catalog/queries";
 import { getProductForEditAction } from "@/lib/admin/actions";
 import { EditProductForm } from "@/components/admin/edit-product-form";

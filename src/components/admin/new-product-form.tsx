@@ -12,7 +12,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { createProductAction } from "@/lib/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

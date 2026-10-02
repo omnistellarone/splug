@@ -9,7 +9,7 @@ import {
   ChevronDown,
   Check,
   RotateCcw,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import type { Category, Brand } from "@/lib/types/database";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

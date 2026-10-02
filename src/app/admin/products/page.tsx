@@ -7,7 +7,7 @@ import {
   ExternalLink,
   Pencil,
   Trash2,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import {
   getAdminProductsAction,
   toggleProductActiveAction,

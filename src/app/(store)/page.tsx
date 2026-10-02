@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Sparkles, ShieldCheck, Zap, Truck, Headphones } from "lucide-react";
+import { ArrowRight, Sparkles, ShieldCheck, Zap, Truck, Headphones } from "@/components/ui/icons";
 import { HeroSection } from "@/components/store/hero-section";
 import { getFeaturedProducts, getCategories } from "@/lib/catalog/queries";
 import { ProductCard } from "@/components/catalog/product-card";

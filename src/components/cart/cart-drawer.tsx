@@ -11,7 +11,7 @@ import {
   Sparkles,
   Plus,
   Minus,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useCartStore } from "@/lib/cart/store";
 import { calculateCartTotals } from "@/lib/cart/merge";
 import { formatMoney } from "@/lib/money";

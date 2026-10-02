@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Heart, Sparkles } from "lucide-react";
+import { Heart, Sparkles } from "@/components/ui/icons";
 import { useWishlistStore } from "@/lib/wishlist/store";
 import { FIXTURE_PRODUCTS } from "@/lib/catalog/fixtures";
 import { ProductCard } from "@/components/catalog/product-card";

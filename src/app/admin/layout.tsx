@@ -10,7 +10,7 @@ import {
   Ticket,
   MessageSquare,
   ArrowLeft,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { getCurrentUserSession } from "@/lib/auth/session";
 import { signOutAction } from "@/lib/auth/actions";
 import { Badge } from "@/components/ui/badge";

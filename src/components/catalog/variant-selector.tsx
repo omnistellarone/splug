@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ShoppingCart, Check, ShieldCheck, Truck, RefreshCw } from "lucide-react";
+import { ShoppingCart, Check, ShieldCheck, Truck, RefreshCw } from "@/components/ui/icons";
 import type { ProductVariantWithDetails } from "@/lib/catalog/types";
 import { formatMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";

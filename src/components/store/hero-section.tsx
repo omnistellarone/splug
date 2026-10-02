@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, ArrowRight, Pause, Play, RotateCcw, ChevronDown } from "lucide-react";
+import { Check, ArrowRight, Pause, Play, RotateCcw, ChevronDown } from "@/components/ui/icons";
 import { Hero3DStage, type ProductView } from "./hero-3d-stage";
 
 export function HeroSection() {

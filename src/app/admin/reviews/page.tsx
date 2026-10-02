@@ -5,7 +5,7 @@ import {
   ShieldCheck,
   Check,
   X,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import {
   getAdminReviewsAction,
   moderateReviewAction,

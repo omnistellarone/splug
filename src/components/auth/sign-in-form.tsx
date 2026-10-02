@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "@/components/ui/icons";
 import { signInAction } from "@/lib/auth/actions";
 import { GoogleSignInButton } from "./google-sign-in-button";
 import { Input } from "@/components/ui/input";

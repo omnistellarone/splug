@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AlertCircle, RotateCcw, Home } from "lucide-react";
+import { AlertCircle, RotateCcw, Home } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 
 export default function GlobalError({

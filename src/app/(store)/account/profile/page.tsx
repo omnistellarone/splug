@@ -2,7 +2,7 @@ import * as React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronLeft, User, Mail, Phone, ShieldCheck } from "lucide-react";
+import { ChevronLeft, User, Mail, Phone, ShieldCheck } from "@/components/ui/icons";
 import { getCurrentUserSession } from "@/lib/auth/session";
 import { updateProfileAction } from "@/lib/auth/actions";
 import { Button } from "@/components/ui/button";

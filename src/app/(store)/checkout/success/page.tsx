@@ -10,7 +10,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useCartStore } from "@/lib/cart/store";
 import { Button } from "@/components/ui/button";
 

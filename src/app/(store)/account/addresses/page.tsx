@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   Loader2,
   Building,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import {
   getUserAddressesAction,
   saveAddressAction,

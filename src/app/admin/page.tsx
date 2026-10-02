@@ -11,7 +11,7 @@ import {
   Plus,
   Ticket,
   ChevronRight,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { getAdminAnalyticsAction } from "@/lib/admin/actions";
 import { formatMoney } from "@/lib/money";
 import { Badge } from "@/components/ui/badge";

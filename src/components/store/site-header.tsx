@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Heart, Menu, X } from "lucide-react";
+import { Search, Heart, Menu, X } from "@/components/ui/icons";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { UserNav } from "@/components/store/user-nav";
 import { CartTrigger } from "@/components/cart/cart-trigger";

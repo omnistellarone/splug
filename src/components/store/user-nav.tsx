@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { User, LogOut, Package, MapPin, Heart, Shield } from "lucide-react";
+import { User, LogOut, Package, MapPin, Heart, Shield } from "@/components/ui/icons";
 import { createClient } from "@/lib/supabase/client";
 import { signOutAction } from "@/lib/auth/actions";
 import {

@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Compass, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Compass, ShoppingBag } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {

@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@/components/ui/icons";
 import { getAdminOrdersAction } from "@/lib/admin/actions";
 import { formatMoney } from "@/lib/money";
 import { Badge } from "@/components/ui/badge";

@@ -9,7 +9,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { updateProductAction } from "@/lib/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

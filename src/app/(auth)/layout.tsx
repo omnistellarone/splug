@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Zap } from "@/components/ui/icons";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function AuthLayout({

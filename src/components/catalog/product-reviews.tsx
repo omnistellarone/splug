@@ -7,7 +7,7 @@ import {
   Plus,
   CheckCircle2,
   Loader2,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import {
   getProductReviewsAction,
   createReviewAction,
