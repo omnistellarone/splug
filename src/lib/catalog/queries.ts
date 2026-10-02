@@ -148,12 +148,8 @@ export async function getProducts(
         };
       });
 
-      // Prepend DB products, avoid duplicates if slug matches
-      const dbSlugs = new Set(mappedDbProducts.map((p) => p.slug));
-      items = [
-        ...mappedDbProducts,
-        ...FIXTURE_PRODUCTS.filter((f) => !dbSlugs.has(f.slug)),
-      ];
+      // When live database products are present, they are the canonical catalog.
+      items = mappedDbProducts;
     } else if (error) {
       console.warn("getProducts query warning:", error.message);
     }

@@ -8,6 +8,8 @@ import {
 import { CatalogFilterBar } from "@/components/catalog/catalog-filter-bar";
 import { ProductGrid } from "@/components/catalog/product-grid";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Shop All Electronics — Splug Electronics",
   description:

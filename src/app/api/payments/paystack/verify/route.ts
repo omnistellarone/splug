@@ -5,7 +5,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const reference = searchParams.get("reference");
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host =
+    forwardedHost || request.headers.get("host") || request.nextUrl.host;
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (host?.includes("localhost") ? "http" : "https");
+  const appUrl = host
+    ? `${proto}://${host}`
+    : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   if (!reference) {
     return NextResponse.redirect(

@@ -1001,29 +1001,35 @@ export async function updateProductAction(
 
     if (prodErr) return { success: false, error: prodErr.message };
 
-    // 2. Update primary variant or insert if none exists
+    // 2. Update variants or insert if none exists
     const { data: variants } = await supabase
       .from("product_variants")
-      .select("id, stock")
-      .eq("product_id", productId)
-      .limit(1);
+      .select("id, stock, price_minor")
+      .eq("product_id", productId);
 
     if (variants && variants.length > 0) {
-      const v = variants[0];
-      const oldStock = v.stock;
+      // Update all variants with the new price and stock
+      for (const v of variants) {
+        await supabase
+          .from("product_variants")
+          .update({
+            price_minor: priceMinor,
+            stock,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", v.id);
+      }
+
+      // Also set SKU on the primary/first variant
       await supabase
         .from("product_variants")
-        .update({
-          sku,
-          price_minor: priceMinor,
-          stock,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", v.id);
+        .update({ sku })
+        .eq("id", variants[0].id);
 
+      const oldStock = variants[0].stock;
       if (stock !== oldStock) {
         await supabase.from("inventory_movements").insert({
-          variant_id: v.id,
+          variant_id: variants[0].id,
           delta: stock - oldStock,
           reason: "adjustment",
           note: "Stock adjustment via admin edit",
@@ -1086,6 +1092,7 @@ export async function updateProductAction(
       });
     }
 
+    revalidatePath("/", "layout");
     revalidatePath("/admin/products");
     revalidatePath("/admin");
     revalidatePath("/shop");

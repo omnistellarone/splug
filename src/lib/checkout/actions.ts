@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { initializePaystackTransaction } from "@/lib/paystack/client";
 import { calculateCouponDiscount } from "@/lib/coupon";
@@ -416,8 +417,18 @@ export async function initializeCheckoutOrderAction(
 
   // 7. Initialize Paystack transaction (server-side only)
   try {
+    const headerList = await headers();
+    const forwardedHost = headerList.get("x-forwarded-host");
+    const host = forwardedHost || headerList.get("host");
+    const proto =
+      headerList.get("x-forwarded-proto") ||
+      (host?.includes("localhost") ? "http" : "https");
+    const detectedOrigin = host ? `${proto}://${host}` : null;
+
     const appUrl =
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      detectedOrigin ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3000";
     const callbackUrl = `${appUrl}/api/payments/paystack/verify`;
 
     const paystackRes = await initializePaystackTransaction({

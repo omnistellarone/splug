@@ -5,6 +5,8 @@ import { HeroSection } from "@/components/store/hero-section";
 import { getFeaturedProducts, getCategories } from "@/lib/catalog/queries";
 import { ProductCard } from "@/components/catalog/product-card";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Splug Electronics — Premium Electronics Store Nigeria",
   description:

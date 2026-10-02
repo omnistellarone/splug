@@ -16,6 +16,8 @@ interface ProductPageProps {
   }>;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
