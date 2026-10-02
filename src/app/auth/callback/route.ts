@@ -14,7 +14,17 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
+      const forwardedHost = request.headers.get("x-forwarded-host");
+      const isLocalEnv = process.env.NODE_ENV === "development";
+      if (isLocalEnv) {
+        return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
+      } else if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}${safeNext}`);
+      } else {
+        return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
+      }
+    } else {
+      console.error("Auth callback exchange error:", error);
     }
   }
 

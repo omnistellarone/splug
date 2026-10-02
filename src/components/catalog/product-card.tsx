@@ -189,10 +189,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         className={cn(
           "w-full h-9 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 select-none cursor-pointer",
           addedAnim
-            ? "bg-[var(--success)] text-white"
+            ? "bg-[var(--success)] text-white shadow-sm"
             : product.inStock
-            ? "bg-[var(--text-primary)] text-white hover:bg-[var(--primary)] active:scale-[0.98]"
-            : "bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed"
+            ? "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] active:scale-[0.98] shadow-sm"
+            : "bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--border)] cursor-not-allowed"
         )}
       >
         {addedAnim ? (

@@ -577,14 +577,14 @@ export const FIXTURE_PRODUCTS: ProductWithDetails[] = [
       updated_at: "2026-10-01T00:00:00Z",
     },
     primaryImage:
-      "https://images.unsplash.com/photo-1609592426508-cc02081d4a03?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80",
     images: [
       {
         id: "img-ank-1",
         product_id: "prod-anker-prime-20k",
         variant_id: null,
         storage_path:
-          "https://images.unsplash.com/photo-1609592426508-cc02081d4a03?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80",
         alt_text: "Anker Prime 200W power bank display",
         sort_order: 1,
         is_primary: true,

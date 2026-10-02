@@ -35,8 +35,17 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users away from protected routes.
   const { pathname } = request.nextUrl;
+
+  // Intercept any OAuth authorization code arriving outside of /auth/callback
+  // (e.g., when Supabase falls back to the default root Site URL '/')
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && !pathname.startsWith("/auth/callback") && !pathname.startsWith("/api/")) {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = "/auth/callback";
+    return NextResponse.redirect(callbackUrl);
+  }
+
   const protectedPrefixes = ["/account", "/checkout"];
   const adminPrefix = "/admin";
 

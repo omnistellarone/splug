@@ -56,7 +56,7 @@ export function SiteFooter() {
   return (
     <footer
       aria-label="Site footer"
-      className="bg-[var(--text-primary)] text-[var(--text-muted)] mt-auto"
+      className="bg-[#0B1F33] dark:bg-[#050D18] text-[var(--text-muted)] mt-auto border-t border-[var(--border)]/40"
     >
       {/* Trust strip — DESIGN.md §50 */}
       <div className="border-b border-white/10">
