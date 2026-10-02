@@ -393,3 +393,66 @@
     background-size: 24px 24px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Hero 3D Stage & Liquid Glass Ribbon Animations
+   ───────────────────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: "Manrope";
+  src: url("/hero/manrope-regular.ttf") format("truetype");
+  font-style: normal;
+  weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Manrope";
+  src: url("/hero/manrope-semibold.ttf") format("truetype");
+  font-style: normal;
+  weight: 600;
+  font-display: swap;
+}
+
+@keyframes ribbon-swell {
+  from {
+    transform: translate3d(-0.8%, 0, 0) rotate(-1.5deg) scaleY(1);
+  }
+  to {
+    transform: translate3d(0.8%, -3%, 0) rotate(1deg) scaleY(1.13);
+  }
+}
+
+@keyframes ribbon-drift {
+  from {
+    transform: translate3d(-1.5%, 1.5%, 0) scaleX(1.06);
+  }
+  to {
+    transform: translate3d(1.5%, -1.5%, 0) scaleX(1.13);
+  }
+}
+
+@keyframes hero-loading-pulse {
+  0%, 100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.hero-glass-ribbon {
+  transform-origin: 50% 100%;
+  animation: ribbon-swell 18s ease-in-out infinite alternate;
+  mask-image: linear-gradient(to bottom, #000 66%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent);
+}
+
+.hero-glass-ribbon-img {
+  animation: ribbon-drift 22s ease-in-out infinite alternate;
+}
+
+[data-hero-motion="paused"] .hero-glass-ribbon,
+[data-hero-motion="paused"] .hero-glass-ribbon-img {
+  animation-play-state: paused !important;
+}
+
