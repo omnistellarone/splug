@@ -858,3 +858,243 @@ export async function toggleProductActiveAction(
   revalidatePath("/shop");
   return { success: true };
 }
+
+/**
+ * Delete or safely archive a product
+ */
+export async function deleteProductAction(
+  productId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdminSession();
+    const supabase = createAdminClient();
+
+    // 1. Check if any order items reference this product's variants
+    const { data: variants } = await supabase
+      .from("product_variants")
+      .select("id")
+      .eq("product_id", productId);
+
+    const variantIds = (variants || []).map((v) => v.id);
+
+    let hasOrders = false;
+    if (variantIds.length > 0) {
+      const { count } = await supabase
+        .from("order_items")
+        .select("id", { count: "exact", head: true })
+        .in("variant_id", variantIds);
+
+      hasOrders = !!(count && count > 0);
+    }
+
+    if (hasOrders) {
+      // Soft-delete / Archive: keep database referential integrity for customer orders (AGENTS.md §10)
+      const { error: archErr } = await supabase
+        .from("products")
+        .update({
+          is_archived: true,
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", productId);
+
+      if (archErr) return { success: false, error: archErr.message };
+    } else {
+      // No order references: safe to delete directly (cascades to variants & images)
+      const { error: delErr } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
+
+      if (delErr) return { success: false, error: delErr.message };
+    }
+
+    revalidatePath("/admin/products");
+    revalidatePath("/admin");
+    revalidatePath("/shop");
+    revalidatePath("/");
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to delete product.";
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Fetch a single product with full details for editing
+ */
+export async function getProductForEditAction(productId: string) {
+  try {
+    await requireAdminSession();
+    const supabase = createAdminClient();
+
+    const { data: product, error } = await supabase
+      .from("products")
+      .select(`
+        *,
+        category:categories(*),
+        brand:brands(*),
+        variants:product_variants(*),
+        images:product_images(*)
+      `)
+      .eq("id", productId)
+      .single();
+
+    if (error || !product) return null;
+    return product;
+  } catch (err) {
+    console.error("getProductForEditAction error:", err);
+    return null;
+  }
+}
+
+/**
+ * Update an existing product, variant, and primary image
+ */
+export async function updateProductAction(
+  productId: string,
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const session = await requireAdminSession();
+    const supabase = createAdminClient();
+
+    const name = (formData.get("name") as string)?.trim();
+    const slug = (formData.get("slug") as string)?.trim();
+    const description = (formData.get("description") as string)?.trim();
+    const rawCategoryId = (formData.get("categoryId") as string)?.trim() || null;
+    const rawBrandId = (formData.get("brandId") as string)?.trim() || null;
+    const rawPriceNaira = Number(formData.get("priceNaira"));
+    const sku = (formData.get("sku") as string)?.trim().toUpperCase();
+    const stock = Number(formData.get("stock") || 0);
+
+    if (!name) return { success: false, error: "Product name is required." };
+    if (!sku) return { success: false, error: "SKU is required." };
+    if (isNaN(rawPriceNaira) || rawPriceNaira <= 0) {
+      return { success: false, error: "Please enter a valid price." };
+    }
+
+    const priceMinor = Math.round(rawPriceNaira * 100);
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let categoryId: string | null = null;
+    if (rawCategoryId && uuidRegex.test(rawCategoryId)) {
+      categoryId = rawCategoryId;
+    }
+    let brandId: string | null = null;
+    if (rawBrandId && uuidRegex.test(rawBrandId)) {
+      brandId = rawBrandId;
+    }
+
+    // 1. Update product info
+    const { error: prodErr } = await supabase
+      .from("products")
+      .update({
+        name,
+        slug,
+        description: description || null,
+        category_id: categoryId,
+        brand_id: brandId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", productId);
+
+    if (prodErr) return { success: false, error: prodErr.message };
+
+    // 2. Update primary variant or insert if none exists
+    const { data: variants } = await supabase
+      .from("product_variants")
+      .select("id, stock")
+      .eq("product_id", productId)
+      .limit(1);
+
+    if (variants && variants.length > 0) {
+      const v = variants[0];
+      const oldStock = v.stock;
+      await supabase
+        .from("product_variants")
+        .update({
+          sku,
+          price_minor: priceMinor,
+          stock,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", v.id);
+
+      if (stock !== oldStock) {
+        await supabase.from("inventory_movements").insert({
+          variant_id: v.id,
+          delta: stock - oldStock,
+          reason: "adjustment",
+          note: "Stock adjustment via admin edit",
+          created_by: session.user?.id,
+        });
+      }
+    } else {
+      await supabase.from("product_variants").insert({
+        product_id: productId,
+        sku,
+        price_minor: priceMinor,
+        stock,
+        options: { Standard: "Default" },
+        is_active: true,
+      });
+    }
+
+    // 3. Handle image upload or image URL
+    const imageFile = formData.get("imageFile") as File | null;
+    const directImageUrl = (formData.get("imageUrl") as string)?.trim() || null;
+    let finalImageUrl: string | null = directImageUrl;
+
+    if (imageFile && imageFile.size > 0 && typeof imageFile.arrayBuffer === "function") {
+      try {
+        const fileExt = imageFile.name.split(".").pop() || "jpg";
+        const sanitizedPath = `products/${productId}-${Date.now()}.${fileExt}`;
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from("product-images")
+          .upload(sanitizedPath, buffer, {
+            contentType: imageFile.type || "image/jpeg",
+            upsert: true,
+          });
+
+        if (!uploadErr && uploadData?.path) {
+          const { data: publicUrlData } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(uploadData.path);
+          finalImageUrl = publicUrlData.publicUrl;
+        }
+      } catch (uploadException) {
+        console.warn("Storage upload exception:", uploadException);
+      }
+    }
+
+    if (finalImageUrl) {
+      // Set existing images is_primary = false, then upsert new primary image
+      await supabase
+        .from("product_images")
+        .update({ is_primary: false })
+        .eq("product_id", productId);
+
+      await supabase.from("product_images").insert({
+        product_id: productId,
+        storage_path: finalImageUrl,
+        alt_text: name,
+        is_primary: true,
+        sort_order: 1,
+      });
+    }
+
+    revalidatePath("/admin/products");
+    revalidatePath("/admin");
+    revalidatePath("/shop");
+    revalidatePath("/");
+    revalidatePath(`/product/${slug}`);
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to update product.";
+    return { success: false, error: msg };
+  }
+}

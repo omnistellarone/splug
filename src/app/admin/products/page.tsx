@@ -5,10 +5,13 @@ import {
   Package,
   Plus,
   ExternalLink,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   getAdminProductsAction,
   toggleProductActiveAction,
+  deleteProductAction,
 } from "@/lib/admin/actions";
 import { formatMoney } from "@/lib/money";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +73,11 @@ export default async function AdminProductsPage() {
                   async function handleToggle() {
                     "use server";
                     await toggleProductActiveAction(p.id, !p.isActive);
+                  }
+
+                  async function handleDelete() {
+                    "use server";
+                    await deleteProductAction(p.id);
                   }
 
                   return (
@@ -152,17 +160,25 @@ export default async function AdminProductsPage() {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <div className="inline-flex items-center gap-2">
+                        <div className="inline-flex items-center gap-1.5">
                           <Link
                             href={`/product/${p.slug}`}
                             target="_blank"
-                            className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
+                            className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-[var(--surface-muted)] transition-colors"
                             title="View storefront page"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                           </Link>
 
-                          <form action={handleToggle}>
+                          <Link
+                            href={`/admin/products/${p.id}/edit`}
+                            className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--primary)] hover:bg-[var(--surface-muted)] transition-colors"
+                            title="Edit product"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Link>
+
+                          <form action={handleToggle} className="inline">
                             <Button
                               type="submit"
                               variant="ghost"
@@ -170,6 +186,18 @@ export default async function AdminProductsPage() {
                               className="h-7 px-2 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                             >
                               {p.isActive ? "Deactivate" : "Activate"}
+                            </Button>
+                          </form>
+
+                          <form action={handleDelete} className="inline">
+                            <Button
+                              type="submit"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10"
+                              title="Delete product"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </form>
                         </div>
