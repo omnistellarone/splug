@@ -563,29 +563,46 @@ export async function getAdminReviewsAction(): Promise<AdminReviewItem[]> {
     .select(`
       id,
       product_id,
+      user_id,
       rating,
       title,
       body,
       is_verified,
       is_approved,
       created_at,
-      products (name),
-      profiles (display_name)
+      products (name)
     `)
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
 
-  const rawReviews = data as unknown as DbReviewRow[];
+  // Fetch author display names
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawList = data as any[];
+  const userIds = [...new Set(rawList.map((r) => r.user_id).filter(Boolean))];
+  const userMap = new Map<string, string>();
 
-  return rawReviews.map((r) => ({
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", userIds);
+
+    if (profiles) {
+      for (const p of profiles) {
+        if (p.display_name) userMap.set(p.id, p.display_name);
+      }
+    }
+  }
+
+  return rawList.map((r) => ({
     id: r.id,
     productId: r.product_id,
     productName: r.products?.name || "Product",
-    authorName: r.profiles?.display_name || "Customer",
+    authorName: (r.user_id && userMap.get(r.user_id)) || "Customer",
     rating: r.rating,
-    title: r.title,
-    body: r.body,
+    title: r.title || "",
+    body: r.body || "",
     isVerified: r.is_verified,
     isApproved: r.is_approved,
     createdAt: r.created_at,

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { revalidatePath } from "next/cache";
 import { calculateReviewSummary } from "./summary";
 import type {
   ProductReviewSummary,
@@ -18,7 +20,6 @@ interface DbReviewRow {
   is_verified: boolean;
   is_approved: boolean;
   created_at: string;
-  profiles?: { display_name: string | null } | null;
 }
 
 /**
@@ -28,8 +29,12 @@ export async function getProductReviewsAction(
   productId: string
 ): Promise<ProductReviewSummary> {
   const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
 
-  const { data: rawReviews, error } = await supabase
+  // Query reviews for this product (approved, plus current user's unapproved reviews if signed in)
+  let query = supabase
     .from("reviews")
     .select(`
       id,
@@ -40,62 +45,74 @@ export async function getProductReviewsAction(
       body,
       is_verified,
       is_approved,
-      created_at,
-      profiles (display_name)
+      created_at
     `)
-    .eq("product_id", productId)
-    .eq("is_approved", true)
-    .order("created_at", { ascending: false });
+    .eq("product_id", productId);
+
+  if (currentUser) {
+    query = query.or(`is_approved.eq.true,user_id.eq.${currentUser.id}`);
+  } else {
+    query = query.eq("is_approved", true);
+  }
+
+  const { data: rawReviews, error } = await query.order("created_at", {
+    ascending: false,
+  });
 
   if (error || !rawReviews || rawReviews.length === 0) {
-    // Provide realistic seed feedback if none exist in DB yet
     return {
-      averageRating: 4.8,
-      totalReviews: 12,
-      ratingDistribution: { 5: 10, 4: 2, 3: 0, 2: 0, 1: 0 },
-      reviews: [
-        {
-          id: "seed-rev-1",
-          product_id: productId,
-          user_id: "seed-user-1",
-          rating: 5,
-          title: "Authentic and brand-new in sealed retail box!",
-          body: "Delivered to Ikeja within 24 hours of placing order. Checked the serial number with the manufacturer website and warranty is 100% genuine.",
-          is_verified: true,
-          is_approved: true,
-          created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-          author_name: "Chinedu O.",
-        },
-        {
-          id: "seed-rev-2",
-          product_id: productId,
-          user_id: "seed-user-2",
-          rating: 5,
-          title: "Flawless performance, great customer support",
-          body: "Everything works as advertised. Smooth payment on Paystack and receipt was in my inbox immediately.",
-          is_verified: true,
-          is_approved: true,
-          created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
-          author_name: "Amina K.",
-        },
-      ],
+      averageRating: 0,
+      totalReviews: 0,
+      ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+      reviews: [],
     };
   }
 
-  const reviewsList = rawReviews as unknown as DbReviewRow[];
+  const reviewsList = rawReviews as DbReviewRow[];
+
+  // Retrieve reviewer display names from profiles table using admin client (bypasses RLS)
+  const userIds = [...new Set(reviewsList.map((r) => r.user_id).filter(Boolean))];
+  const userMap = new Map<string, string>();
+
+  if (userIds.length > 0) {
+    try {
+      const admin = createAdminClient();
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", userIds);
+
+      if (profiles) {
+        for (const p of profiles) {
+          if (p.display_name) {
+            userMap.set(p.id, p.display_name);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not look up reviewer profiles:", e);
+    }
+  }
+
   return calculateReviewSummary(
-    reviewsList.map((r) => ({
-      id: r.id,
-      product_id: r.product_id,
-      user_id: r.user_id,
-      rating: r.rating,
-      title: r.title,
-      body: r.body,
-      is_verified: r.is_verified,
-      is_approved: r.is_approved,
-      created_at: r.created_at,
-      author_name: r.profiles?.display_name,
-    }))
+    reviewsList.map((r) => {
+      let authorName = userMap.get(r.user_id);
+      if (!authorName) {
+        authorName = currentUser && currentUser.id === r.user_id ? "You" : "Verified Customer";
+      }
+      return {
+        id: r.id,
+        product_id: r.product_id,
+        user_id: r.user_id,
+        rating: r.rating,
+        title: r.title,
+        body: r.body,
+        is_verified: r.is_verified,
+        is_approved: r.is_approved,
+        created_at: r.created_at,
+        author_name: authorName,
+      };
+    })
   );
 }
 
@@ -133,24 +150,47 @@ export async function createReviewAction(
 
   const isVerifiedBuyer = !!purchaseOrder;
 
-  // Insert review
+  // Insert or update review (one review per user per product)
   const { data: insertedReview, error } = await supabase
     .from("reviews")
-    .insert({
-      product_id: input.productId,
-      user_id: user.id,
-      rating,
-      title: input.title.trim(),
-      body: input.body.trim(),
-      is_verified: isVerifiedBuyer,
-      is_approved: true, // auto-approve standard reviews
-    })
+    .upsert(
+      {
+        product_id: input.productId,
+        user_id: user.id,
+        rating,
+        title: input.title.trim(),
+        body: input.body.trim(),
+        is_verified: isVerifiedBuyer,
+        is_approved: true, // auto-approve standard reviews
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "product_id, user_id" }
+    )
     .select()
     .single();
 
   if (error) {
     return { success: false, error: error.message };
   }
+
+  // Fetch author display name
+  let authorName = "You";
+  try {
+    const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.display_name) {
+      authorName = profile.display_name;
+    }
+  } catch {
+    // Keep "You"
+  }
+
+  revalidatePath(`/product/[slug]`, "page");
+  revalidatePath("/admin/reviews");
 
   return {
     success: true,
@@ -164,7 +204,7 @@ export async function createReviewAction(
       is_verified: insertedReview.is_verified,
       is_approved: insertedReview.is_approved,
       created_at: insertedReview.created_at,
-      author_name: "You",
+      author_name: authorName,
     },
   };
 }

@@ -269,18 +269,28 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
 
       {/* ── Individual Reviews List ── */}
       <div className="space-y-4">
-        {data.reviews.map((rev) => {
-          const dateStr = new Date(rev.created_at).toLocaleDateString("en-NG", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          });
+        {data.reviews.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-subtle)]/40 space-y-2">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
+              No reviews yet for this product
+            </p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Be the first to share your thoughts and help other buyers!
+            </p>
+          </div>
+        ) : (
+          data.reviews.map((rev) => {
+            const dateStr = new Date(rev.created_at).toLocaleDateString("en-NG", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
 
-          return (
-            <div
-              key={rev.id}
-              className="p-5 sm:p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] space-y-3 shadow-xs"
-            >
+            return (
+              <div
+                key={rev.id}
+                className="p-5 sm:p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] space-y-3 shadow-xs"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -327,7 +337,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
               )}
             </div>
           );
-        })}
+        }))}
       </div>
     </div>
   );
