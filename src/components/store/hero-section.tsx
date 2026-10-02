@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, ArrowRight, Pause, Play, RotateCcw, ChevronDown } from "@/components/ui/icons";
+import { Check, ArrowRight, ChevronDown } from "@/components/ui/icons";
 import { Hero3DStage, type ProductView } from "./hero-3d-stage";
 
 export function HeroSection() {
   const [activeView, setActiveView] = React.useState<ProductView>("both");
   const [isPaused, setIsPaused] = React.useState(false);
-  const [replayKey, setReplayKey] = React.useState(0);
+  const [replayKey] = React.useState(0);
 
   // Check prefers-reduced-motion
   React.useEffect(() => {
@@ -23,15 +23,6 @@ export function HeroSection() {
     mediaQuery.addEventListener("change", handler);
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
-
-  const handleToggleMotion = () => {
-    setIsPaused((prev) => !prev);
-  };
-
-  const handleReplayIntro = () => {
-    setIsPaused(false);
-    setReplayKey((k) => k + 1);
-  };
 
   return (
     <section
@@ -76,65 +67,6 @@ export function HeroSection() {
         />
       </div>
 
-      {/* ── Top Secondary Controls / Quick Mode Bar ── */}
-      <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 w-full flex items-center justify-between mb-4 sm:mb-6">
-        <div className="hidden sm:flex items-center gap-3 text-xs text-slate-300/80 font-medium">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-indigo-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-            Interactive 3D Showcase
-          </span>
-          <span className="text-slate-400">•</span>
-          <button
-            type="button"
-            onClick={() => setActiveView("duo")}
-            className={`transition-colors hover:text-white ${activeView === "duo" ? "text-white font-semibold" : "text-slate-400"}`}
-          >
-            iPhone Duo
-          </button>
-          <span className="text-slate-500">/</span>
-          <button
-            type="button"
-            onClick={() => setActiveView("pro")}
-            className={`transition-colors hover:text-white ${activeView === "pro" ? "text-white font-semibold" : "text-slate-400"}`}
-          >
-            iPhone 18 Pro
-          </button>
-        </div>
-
-        {/* Motion control toggle */}
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleToggleMotion}
-            aria-label={isPaused ? "Resume animation" : "Pause animation"}
-            aria-pressed={isPaused}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.09] border border-white/10 text-xs text-slate-300 transition-colors"
-          >
-            {isPaused ? (
-              <>
-                <Play className="h-3.5 w-3.5 fill-current" />
-                <span className="text-[11px] hidden sm:inline">Resume motion</span>
-              </>
-            ) : (
-              <>
-                <Pause className="h-3.5 w-3.5" />
-                <span className="text-[11px] hidden sm:inline">Pause motion</span>
-              </>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleReplayIntro}
-            aria-label="Replay intro animation"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.09] border border-white/10 text-xs text-slate-300 transition-colors"
-            title="Replay intro"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span className="text-[11px] hidden md:inline">Replay</span>
-          </button>
-        </div>
-      </div>
 
       {/* ── Main Content Grid ── */}
       <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 w-full flex-1 flex flex-col justify-center">

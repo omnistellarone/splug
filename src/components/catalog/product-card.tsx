@@ -100,7 +100,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       {/* Product Image */}
       <Link
         href={`/product/${product.slug}`}
-        className="relative aspect-square w-full rounded-xl overflow-hidden bg-[var(--surface-subtle)] mb-3.5 flex items-center justify-center p-3"
+        className="relative aspect-square w-full rounded-xl overflow-hidden bg-[var(--surface-subtle)] mb-3.5 block"
       >
         {product.primaryImage ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -108,7 +108,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             src={product.primaryImage}
             alt={product.name}
             loading={priority ? "eager" : "lazy"}
-            className="h-full w-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-300"
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 block"
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-[var(--text-muted)] text-xs">
