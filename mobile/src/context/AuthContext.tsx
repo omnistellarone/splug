@@ -175,9 +175,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await SecureStore.setItemAsync(SAVED_EMAIL_KEY, cleanEmail);
       }
 
-      setUser(data.user);
-      setSession(data.session);
-      return { success: true };
+      if (data.session) {
+        setUser(data.user);
+        setSession(data.session);
+      } else {
+        setUser(null);
+        setSession(null);
+      }
+      return { success: true, requiresVerification: !data.session };
     } catch (err: unknown) {
       return {
         success: false,

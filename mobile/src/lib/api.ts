@@ -574,27 +574,120 @@ export const api = {
 
   // Addresses
   async getAddresses() {
-    return request<Address[]>("/api/addresses");
+    const res = await request<Address[]>("/api/addresses");
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) return res;
+
+      const { data, error } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", userId)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        return { success: true, data: data as Address[] };
+      }
+    } catch {
+      // Ignore
+    }
+    return res;
   },
 
   async saveAddress(address: Partial<Address>) {
-    return request<Address>("/api/addresses", {
+    const res = await request<Address>("/api/addresses", {
       method: "POST",
       body: JSON.stringify(address),
     });
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) return res;
+
+      if (address.is_default) {
+        await supabase
+          .from("addresses")
+          .update({ is_default: false })
+          .eq("user_id", userId);
+      }
+
+      const { data, error } = await supabase
+        .from("addresses")
+        .insert({
+          user_id: userId,
+          label: address.label || "Home",
+          full_name: address.full_name,
+          phone: address.phone,
+          address_line1: address.address_line1,
+          address_line2: address.address_line2 || null,
+          city: address.city,
+          state: address.state,
+          country: address.country || "NG",
+          is_default: address.is_default ?? false,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        return { success: true, data: data as Address };
+      }
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    } catch {
+      // Ignore
+    }
+    return res;
   },
 
   async setDefaultAddress(id: string) {
-    return request<Address>("/api/addresses", {
+    const res = await request<Address>("/api/addresses", {
       method: "PATCH",
       body: JSON.stringify({ id, is_default: true }),
     });
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        await supabase.from("addresses").update({ is_default: false }).eq("user_id", userId);
+        const { data } = await supabase.from("addresses").update({ is_default: true }).eq("id", id).eq("user_id", userId).select().single();
+        if (data) return { success: true, data: data as Address };
+      }
+    } catch {
+      // Ignore
+    }
+    return res;
   },
 
   async deleteAddress(id: string) {
-    return request<{ success: boolean }>(`/api/addresses?id=${encodeURIComponent(id)}`, {
+    const res = await request<{ success: boolean }>(`/api/addresses?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        await supabase.from("addresses").delete().eq("id", id).eq("user_id", userId);
+        return { success: true };
+      }
+    } catch {
+      // Ignore
+    }
+    return res;
   },
 
   // Checkout & Paystack

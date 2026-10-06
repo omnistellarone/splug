@@ -73,9 +73,19 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       if (!res.success) {
         setFormError(res.error || "Unable to create account. Please try again.");
       } else {
-        Alert.alert("Account Created", "Your account was successfully registered!", [
-          { text: "OK", onPress: () => navigation.navigate("Main", { screen: "Home" }) },
-        ]);
+        Alert.alert(
+          "Verify Your Account",
+          `A verification link has been sent to ${identifier.trim()}.\n\nPlease check your email inbox and verify your account. Once verified, you can sign in to start shopping!`,
+          [
+            {
+              text: "Proceed to Sign In",
+              onPress: () => {
+                setActiveTab("signIn");
+                setPassword("");
+              },
+            },
+          ]
+        );
       }
     }
   };

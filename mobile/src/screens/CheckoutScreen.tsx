@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing } from "@/theme/tokens";
@@ -390,8 +392,21 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       </View>
 
       {/* Add Address Modal */}
-      <Modal visible={showAddressModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      <Modal
+        visible={showAddressModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowAddressModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setShowAddressModal(false)}
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Delivery Address</Text>
@@ -400,86 +415,88 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.modalForm}>
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Recipient Full Name</Text>
-                  <TextInput
-                    style={styles.fieldInput}
-                    value={newFullName}
-                    onChangeText={setNewFullName}
-                    placeholder="e.g. Ebuka Nwosu"
-                  />
-                </View>
-
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Nigerian Phone Number</Text>
-                  <TextInput
-                    style={styles.fieldInput}
-                    value={newPhone}
-                    onChangeText={setNewPhone}
-                    placeholder="e.g. +234 803 123 4567"
-                    keyboardType="phone-pad"
-                  />
-                </View>
-
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Street Address</Text>
-                  <TextInput
-                    style={styles.fieldInput}
-                    value={newLine1}
-                    onChangeText={setNewLine1}
-                    placeholder="e.g. Plot 14 Admiralty Way, Lekki"
-                  />
-                </View>
-
-                <View style={styles.fieldRow}>
-                  <View style={[styles.field, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>City / Area</Text>
-                    <TextInput
-                      style={styles.fieldInput}
-                      value={newCity}
-                      onChangeText={setNewCity}
-                      placeholder="e.g. Lekki"
-                    />
-                  </View>
-                  <View style={[styles.field, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>State</Text>
-                    <TextInput
-                      style={styles.fieldInput}
-                      value={newState}
-                      onChangeText={setNewState}
-                      placeholder="e.g. Lagos State"
-                    />
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.defaultCheckRow}
-                  onPress={() => setNewIsDefault(!newIsDefault)}
-                >
-                  <View style={[styles.checkbox, newIsDefault && styles.checkboxActive]}>
-                    {newIsDefault && <CheckCircle2 size={12} color={colors.onPrimary} />}
-                  </View>
-                  <Text style={styles.defaultCheckText}>Set as default delivery address</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.saveAddressBtn}
-                  onPress={handleSaveNewAddress}
-                  disabled={isSavingAddress}
-                  activeOpacity={0.85}
-                >
-                  {isSavingAddress ? (
-                    <ActivityIndicator color={colors.onPrimary} />
-                  ) : (
-                    <Text style={styles.saveAddressBtnText}>Save Address</Text>
-                  )}
-                </TouchableOpacity>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.modalForm}
+            >
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Recipient Full Name</Text>
+                <TextInput
+                  style={styles.fieldInput}
+                  value={newFullName}
+                  onChangeText={setNewFullName}
+                  placeholder="e.g. Ebuka Nwosu"
+                />
               </View>
+
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Nigerian Phone Number</Text>
+                <TextInput
+                  style={styles.fieldInput}
+                  value={newPhone}
+                  onChangeText={setNewPhone}
+                  placeholder="e.g. +234 803 123 4567"
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Street Address</Text>
+                <TextInput
+                  style={styles.fieldInput}
+                  value={newLine1}
+                  onChangeText={setNewLine1}
+                  placeholder="e.g. Plot 14 Admiralty Way, Lekki"
+                />
+              </View>
+
+              <View style={styles.fieldRow}>
+                <View style={[styles.field, { flex: 1 }]}>
+                  <Text style={styles.fieldLabel}>City / Area</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={newCity}
+                    onChangeText={setNewCity}
+                    placeholder="e.g. Lekki"
+                  />
+                </View>
+                <View style={[styles.field, { flex: 1 }]}>
+                  <Text style={styles.fieldLabel}>State</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={newState}
+                    onChangeText={setNewState}
+                    placeholder="e.g. Lagos State"
+                  />
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.defaultCheckRow}
+                onPress={() => setNewIsDefault(!newIsDefault)}
+              >
+                <View style={[styles.checkbox, newIsDefault && styles.checkboxActive]}>
+                  {newIsDefault && <CheckCircle2 size={12} color={colors.onPrimary} />}
+                </View>
+                <Text style={styles.defaultCheckText}>Set as default delivery address</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.saveAddressBtn}
+                onPress={handleSaveNewAddress}
+                disabled={isSavingAddress}
+                activeOpacity={0.85}
+              >
+                {isSavingAddress ? (
+                  <ActivityIndicator color={colors.onPrimary} />
+                ) : (
+                  <Text style={styles.saveAddressBtnText}>Save Address</Text>
+                )}
+              </TouchableOpacity>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Paystack In-App WebView Modal */}
