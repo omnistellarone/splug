@@ -727,11 +727,56 @@ export const api = {
 
   // Orders
   async getOrders() {
-    return request<Order[]>("/api/orders");
+    const res = await request<Order[]>("/api/orders");
+    if (res.success && res.data && res.data.length > 0) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        const { data, error } = await supabase
+          .from("orders")
+          .select(`
+            *,
+            order_items (*),
+            order_status_history (*)
+          `)
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false });
+
+        if (!error && data) {
+          return { success: true, data: data as Order[] };
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return res;
   },
 
   async getOrderDetails(orderId: string) {
-    return request<Order>(`/api/orders/${encodeURIComponent(orderId)}`);
+    const res = await request<Order>(`/api/orders/${encodeURIComponent(orderId)}`);
+    if (res.success && res.data) return res;
+
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          *,
+          order_items (*),
+          order_status_history (*)
+        `)
+        .eq("id", orderId)
+        .single();
+
+      if (!error && data) {
+        return { success: true, data: data as Order };
+      }
+    } catch {
+      // Ignore
+    }
+    return res;
   },
 
   // Store Settings

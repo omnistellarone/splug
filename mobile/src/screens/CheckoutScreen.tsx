@@ -171,6 +171,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           country: selectedAddress.country || "NG",
         },
         couponCode: couponCode || undefined,
+        callbackUrl: "slurge://payment-callback",
       });
 
       if (res.success && res.data) {
@@ -186,29 +187,42 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     }
   };
 
-  const handleNavigationStateChange = (navState: { url: string }) => {
-    const url = navState.url;
+  const handleInterceptPaymentUrl = (url: string) => {
+    if (!url) return true;
     const matchRef = url.match(/[?&](reference|trxref)=([^&]+)/);
     const resolvedRef = matchRef ? decodeURIComponent(matchRef[2]) : currentReference;
+    const matchOrder = url.match(/[?&]orderId=([^&]+)/);
+    const resolvedOrder = matchOrder ? decodeURIComponent(matchOrder[1]) : undefined;
 
-    // Check if redirect contains verify or callback or checkout/success
+    // Intercept Paystack completion, success callback, or deep link
     if (
+      url.startsWith("slurge://payment-callback") ||
+      url.includes("payment-callback") ||
       url.includes("payments/paystack/verify") ||
       url.includes("checkout/success") ||
-      url.includes("slurge://payment-callback") ||
-      (url.includes("status=success") && !url.includes("checkout.paystack.com"))
+      (url.includes("status=success") && !url.includes("checkout.paystack.com")) ||
+      (url.includes("reference=") && !url.includes("checkout.paystack.com") && !url.includes("standard.paystack.co"))
     ) {
       setPaystackAuthUrl(null);
       clearCart();
-      navigation.replace("PaymentStatus", { reference: resolvedRef || undefined });
+      navigation.replace("PaymentStatus", {
+        reference: resolvedRef || undefined,
+        orderId: resolvedOrder,
+      });
+      return false;
     } else if (
       url.includes("checkout/failure") ||
       url.includes("cancel") ||
       url.includes("standard.paystack.co/close")
     ) {
       setPaystackAuthUrl(null);
-      navigation.replace("PaymentStatus", { reference: resolvedRef || undefined, failed: true });
+      navigation.replace("PaymentStatus", {
+        reference: resolvedRef || undefined,
+        failed: true,
+      });
+      return false;
     }
+    return true;
   };
 
   return (
@@ -391,113 +405,111 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         </TouchableOpacity>
       </View>
 
-      {/* Add Address Modal */}
-      <Modal
-        visible={showAddressModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowAddressModal(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
+      {/* Add Address Drawer (In-Screen Overlay for flawless Android & iOS keyboard avoidance) */}
+      {showAddressModal && (
+        <View style={styles.modalRootOverlay}>
           <TouchableOpacity
-            style={StyleSheet.absoluteFill}
+            style={styles.modalBackdrop}
             activeOpacity={1}
             onPress={() => setShowAddressModal(false)}
           />
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Delivery Address</Text>
-              <TouchableOpacity onPress={() => setShowAddressModal(false)}>
-                <X size={20} color={colors.textPrimary} />
-              </TouchableOpacity>
+          <KeyboardAvoidingView
+            style={styles.modalKeyboardAvoid}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add Delivery Address</Text>
+                <TouchableOpacity onPress={() => setShowAddressModal(false)} style={{ padding: 4 }}>
+                  <X size={20} color={colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.modalForm}
+              >
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Recipient Full Name</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={newFullName}
+                    onChangeText={setNewFullName}
+                    placeholder="e.g. Ebuka Nwosu"
+                  />
+                </View>
+
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Nigerian Phone Number</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={newPhone}
+                    onChangeText={setNewPhone}
+                    placeholder="e.g. +234 803 123 4567"
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Street Address</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={newLine1}
+                    onChangeText={setNewLine1}
+                    placeholder="e.g. Plot 14 Admiralty Way, Lekki"
+                  />
+                </View>
+
+                <View style={styles.fieldRow}>
+                  <View style={[styles.field, { flex: 1 }]}>
+                    <Text style={styles.fieldLabel}>City / Area</Text>
+                    <TextInput
+                      style={styles.fieldInput}
+                      value={newCity}
+                      onChangeText={setNewCity}
+                      placeholder="e.g. Lekki"
+                    />
+                  </View>
+                  <View style={[styles.field, { flex: 1 }]}>
+                    <Text style={styles.fieldLabel}>State</Text>
+                    <TextInput
+                      style={styles.fieldInput}
+                      value={newState}
+                      onChangeText={setNewState}
+                      placeholder="e.g. Lagos State"
+                    />
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.defaultCheckRow}
+                  onPress={() => setNewIsDefault(!newIsDefault)}
+                >
+                  <View style={[styles.checkbox, newIsDefault && styles.checkboxActive]}>
+                    {newIsDefault && <CheckCircle2 size={12} color={colors.onPrimary} />}
+                  </View>
+                  <Text style={styles.defaultCheckText}>Set as default delivery address</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.saveAddressBtn}
+                  onPress={handleSaveNewAddress}
+                  disabled={isSavingAddress}
+                  activeOpacity={0.85}
+                >
+                  {isSavingAddress ? (
+                    <ActivityIndicator color={colors.onPrimary} />
+                  ) : (
+                    <Text style={styles.saveAddressBtnText}>Save Address</Text>
+                  )}
+                </TouchableOpacity>
+              </ScrollView>
             </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.modalForm}
-            >
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Recipient Full Name</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={newFullName}
-                  onChangeText={setNewFullName}
-                  placeholder="e.g. Ebuka Nwosu"
-                />
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Nigerian Phone Number</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={newPhone}
-                  onChangeText={setNewPhone}
-                  placeholder="e.g. +234 803 123 4567"
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Street Address</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={newLine1}
-                  onChangeText={setNewLine1}
-                  placeholder="e.g. Plot 14 Admiralty Way, Lekki"
-                />
-              </View>
-
-              <View style={styles.fieldRow}>
-                <View style={[styles.field, { flex: 1 }]}>
-                  <Text style={styles.fieldLabel}>City / Area</Text>
-                  <TextInput
-                    style={styles.fieldInput}
-                    value={newCity}
-                    onChangeText={setNewCity}
-                    placeholder="e.g. Lekki"
-                  />
-                </View>
-                <View style={[styles.field, { flex: 1 }]}>
-                  <Text style={styles.fieldLabel}>State</Text>
-                  <TextInput
-                    style={styles.fieldInput}
-                    value={newState}
-                    onChangeText={setNewState}
-                    placeholder="e.g. Lagos State"
-                  />
-                </View>
-              </View>
-
-              <TouchableOpacity
-                style={styles.defaultCheckRow}
-                onPress={() => setNewIsDefault(!newIsDefault)}
-              >
-                <View style={[styles.checkbox, newIsDefault && styles.checkboxActive]}>
-                  {newIsDefault && <CheckCircle2 size={12} color={colors.onPrimary} />}
-                </View>
-                <Text style={styles.defaultCheckText}>Set as default delivery address</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.saveAddressBtn}
-                onPress={handleSaveNewAddress}
-                disabled={isSavingAddress}
-                activeOpacity={0.85}
-              >
-                {isSavingAddress ? (
-                  <ActivityIndicator color={colors.onPrimary} />
-                ) : (
-                  <Text style={styles.saveAddressBtnText}>Save Address</Text>
-                )}
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+          </KeyboardAvoidingView>
+        </View>
+      )}
 
       {/* Paystack In-App WebView Modal */}
       {paystackAuthUrl && (
@@ -520,7 +532,8 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
             <WebView
               source={{ uri: paystackAuthUrl }}
-              onNavigationStateChange={handleNavigationStateChange}
+              onShouldStartLoadWithRequest={(req) => handleInterceptPaymentUrl(req.url)}
+              onNavigationStateChange={(nav) => handleInterceptPaymentUrl(nav.url)}
               startInLoadingState
               renderLoading={() => (
                 <View style={styles.webLoading}>
@@ -838,9 +851,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+  modalRootOverlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 9999,
+    elevation: 30,
+    justifyContent: "flex-end",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  modalKeyboardAvoid: {
+    width: "100%",
+    maxHeight: "88%",
     justifyContent: "flex-end",
   },
   modalContent: {
@@ -848,7 +871,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     padding: spacing.base,
-    maxHeight: "85%",
+    maxHeight: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 25,
   },
   modalHeader: {
     flexDirection: "row",

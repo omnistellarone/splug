@@ -249,6 +249,16 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const isMobile =
+      searchParams.get("mobile") === "true" ||
+      /Android|iPhone|iPad|iPod|Mobile/i.test(request.headers.get("user-agent") || "");
+
+    if (isMobile) {
+      return NextResponse.redirect(
+        `slurge://payment-callback?reference=${encodeURIComponent(reference)}&orderId=${order.id}&status=success`
+      );
+    }
+
     return NextResponse.redirect(
       new URL(
         `/checkout/success?ref=${encodeURIComponent(reference)}&orderId=${order.id}`,
@@ -267,6 +277,17 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    const isMobile =
+      searchParams.get("mobile") === "true" ||
+      /Android|iPhone|iPad|iPod|Mobile/i.test(request.headers.get("user-agent") || "");
+
+    if (isMobile) {
+      return NextResponse.redirect(
+        `slurge://payment-callback?reference=${encodeURIComponent(reference)}&failed=true`
+      );
+    }
+
     return NextResponse.redirect(
       new URL(
         `/checkout/failure?ref=${encodeURIComponent(reference)}&reason=verification_error`,

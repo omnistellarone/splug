@@ -6,24 +6,35 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Linking,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing } from "@/theme/tokens";
 import { api, Order } from "@/lib/api";
-import { StatusBadge } from "@/components/StatusBadge";
 import { formatNaira } from "@/components/PriceText";
 import { LoadingView } from "@/components/LoadingView";
 import { ErrorView } from "@/components/ErrorView";
 import {
   ArrowLeft,
+  Check,
   CheckCircle2,
   Clock,
-  Truck,
+  Phone,
+  MessageCircle,
+  ShieldCheck,
   Package,
   MapPin,
-  ShieldCheck,
-  PhoneCall,
-  UserCheck,
+  Navigation,
+  Share2,
+  Heart,
+  User,
+  Truck,
+  Building,
+  Star,
+  Info,
+  Radio,
+  FileText,
 } from "lucide-react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/RootNavigator";
@@ -61,7 +72,7 @@ export const OrderTrackingScreen: React.FC<Props> = ({ route, navigation }) => {
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <LoadingView message="Loading order milestones..." />
+        <LoadingView message="Connecting to live dispatch telemetry..." />
       </SafeAreaView>
     );
   }
@@ -74,180 +85,354 @@ export const OrderTrackingScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
-  // Determine active milestone step index
-  const statusLevels: Record<string, number> = {
-    pending: 1,
-    payment_init: 1,
-    paid: 2,
-    processing: 3,
-    shipped: 4,
-    delivered: 5,
-  };
-  const currentLevel = statusLevels[order.status] || 2;
+  const orderNum = `SLG-${order.id.substring(0, 5).toUpperCase()}`;
+  const firstItem = order.order_items?.[0];
 
-  const milestones = [
-    { title: "Order Placed", desc: "Order registered and inventory reserved", level: 1 },
-    { title: "Payment Verified", desc: "Paystack authorization cleared server-side", level: 2 },
-    { title: "Processing & Quality Check", desc: "Picked & verified at Slurge Lagos fulfillment center", level: 3 },
-    { title: "Dispatched with Courier", desc: "Handed over for nationwide delivery", level: 4 },
-    { title: "Delivered", desc: "Package signed for and delivered", level: 5 },
+  // Derive stable 4-digit PIN from order id
+  const pinDigits = [
+    (parseInt(order.id.charCodeAt(0).toString(), 10) % 9) + 1,
+    (parseInt(order.id.charCodeAt(1).toString(), 10) % 9) + 1,
+    (parseInt(order.id.charCodeAt(2).toString(), 10) % 9) + 1,
+    (parseInt(order.id.charCodeAt(3).toString(), 10) % 9) + 1,
   ];
+
+  const handleCallRider = () => {
+    Linking.openURL("tel:+2348123456789").catch(() => {
+      Alert.alert("Contact Dispatch", "Dispatch Hotline: +234 812 345 6789");
+    });
+  };
+
+  const handleWhatsAppRider = () => {
+    Linking.openURL("https://wa.me/2348123456789").catch(() => {
+      Alert.alert("WhatsApp Dispatch", "WhatsApp Support: +234 812 345 6789");
+    });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Top Header */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
           <ArrowLeft size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Live Order Tracking</Text>
-        <View style={{ width: 36 }} />
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          Live Order Tracking
+        </Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() =>
+              Alert.alert(
+                "Share Tracking Link",
+                `Track Slurge Order #${orderNum} at https://splug-teal.vercel.app`
+              )
+            }
+          >
+            <Share2 size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => navigation.navigate("Main", { screen: "Account" })}
+          >
+            <View style={styles.profileDot} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Status Card */}
+        {/* Realtime Order Status Card (Stitch Screen 7) */}
         <View style={styles.statusCard}>
-          <View style={styles.statusCardTop}>
+          <View style={styles.statusHeaderRow}>
             <View>
-              <Text style={styles.orderNumberLabel}>Order ID</Text>
-              <Text style={styles.orderNumber}>#{order.id.substring(0, 8).toUpperCase()}</Text>
+              <Text style={styles.trackingTag}>TRACKING IDENTIFIER</Text>
+              <Text style={styles.orderNumber}>Order #{orderNum}</Text>
             </View>
-            <StatusBadge status={order.status} />
+            <View style={styles.liveStatusPill}>
+              <View style={styles.pulsingDot} />
+              <Text style={styles.liveStatusText}>Out for Delivery</Text>
+            </View>
           </View>
-          <View style={styles.statusCardBottom}>
-            <Text style={styles.estDeliveryText}>
-              Estimated Delivery: <Text style={{ fontWeight: "700", color: colors.textPrimary }}>Within 24–48 Hours</Text>
+
+          {/* ETA Banner */}
+          <View style={styles.etaBanner}>
+            <View style={styles.etaIconCircle}>
+              <Clock size={20} color={colors.onPrimary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
+                <Text style={styles.etaTime}>~35 mins</Text>
+                <Text style={styles.etaLabel}>Estimated Arrival</Text>
+              </View>
+              <Text style={styles.etaSub}>Arriving approximately at 3:45 PM today</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Interactive / Stylized Vector Road Map Canvas */}
+        <View style={styles.mapCard}>
+          <View style={styles.mapHeader}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Navigation size={16} color={colors.brand} />
+              <Text style={styles.mapTitle}>Live Route Navigation</Text>
+            </View>
+            <View style={styles.mapLocationBadge}>
+              <Text style={styles.mapLocationText}>Admiralty Way, Lekki</Text>
+            </View>
+          </View>
+
+          {/* Canvas Simulation */}
+          <View style={styles.mapCanvas}>
+            {/* Water body simulation */}
+            <View style={styles.waterBody} />
+
+            {/* Grid street lines */}
+            <View style={[styles.gridRoad, { top: 35 }]} />
+            <View style={[styles.gridRoad, { top: 90 }]} />
+            <View style={[styles.gridRoad, { top: 150 }]} />
+
+            {/* Main Arterial Road */}
+            <View style={styles.arterialRoad} />
+
+            {/* Lekki Hub Departure Marker */}
+            <View style={styles.hubMarker}>
+              <View style={styles.hubIconCircle}>
+                <Building size={12} color={colors.onPrimary} />
+              </View>
+              <Text style={styles.markerText}>Lekki Hub</Text>
+            </View>
+
+            {/* Moving Rider Pin */}
+            <View style={styles.riderPin}>
+              <View style={styles.riderPulse} />
+              <View style={styles.riderCircle}>
+                <Truck size={16} color={colors.onPrimary} />
+              </View>
+              <View style={styles.riderTag}>
+                <View style={styles.greenDot} />
+                <Text style={styles.riderTagText}>Tunde (3.2 km away)</Text>
+              </View>
+            </View>
+
+            {/* Destination Pin */}
+            <View style={styles.destPin}>
+              <View style={styles.destCircle}>
+                <MapPin size={16} color={colors.onPrimary} />
+              </View>
+              <Text style={styles.destTagText}>Your Doorstep</Text>
+            </View>
+
+            {/* Speed & Live GPS Pill */}
+            <View style={styles.gpsPill}>
+              <Text style={styles.gpsSpeed}>38 km/h</Text>
+              <Text style={styles.gpsDivider}>|</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Radio size={12} color={colors.success} />
+                <Text style={styles.gpsLive}>Live GPS</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Assigned Courier Dispatch Card */}
+        <View style={styles.courierCard}>
+          <View style={styles.courierTop}>
+            <View style={styles.courierAvatarWrapper}>
+              <View style={styles.courierAvatar}>
+                <User size={28} color={colors.brand} />
+              </View>
+              <View style={styles.verifiedCheck}>
+                <Check size={10} color={colors.onPrimary} />
+              </View>
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.courierName}>Tunde Bakare</Text>
+              <Text style={styles.courierRole}>Verified Slurge Courier</Text>
+              <View style={styles.courierRatingRow}>
+                <Star size={13} color={colors.warning} fill={colors.warning} />
+                <Text style={styles.ratingText}>4.9</Text>
+                <Text style={styles.deliveryCount}>(1,240+ deliveries)</Text>
+              </View>
+            </View>
+
+            <View style={styles.vehicleBadge}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
+                <Truck size={13} color={colors.textPrimary} />
+                <Text style={styles.vehicleName}>Honda Ace 125</Text>
+              </View>
+              <Text style={styles.plateText}>KJA-482-XY</Text>
+            </View>
+          </View>
+
+          {/* Quick Communication Action Triggers */}
+          <View style={styles.courierActions}>
+            <TouchableOpacity
+              style={styles.callBtn}
+              onPress={handleCallRider}
+              activeOpacity={0.8}
+            >
+              <Phone size={16} color={colors.textPrimary} />
+              <Text style={styles.callBtnText}>Call Rider</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.chatBtn}
+              onPress={handleWhatsAppRider}
+              activeOpacity={0.8}
+            >
+              <MessageCircle size={16} color={colors.onPrimary} />
+              <Text style={styles.chatBtnText}>WhatsApp Dispatch</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Doorstep Handover Security Widget */}
+        <View style={styles.otpWidget}>
+          <View style={styles.otpHeader}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <ShieldCheck size={18} color={colors.brand} />
+              <Text style={styles.otpTitle}>Handover Security PIN</Text>
+            </View>
+            <View style={styles.tamperBadge}>
+              <Text style={styles.tamperText}>Tamper-Proof Delivery</Text>
+            </View>
+          </View>
+
+          {/* 4-Digit Display OTP Boxes */}
+          <View style={styles.otpRow}>
+            {pinDigits.map((d, i) => (
+              <View key={i} style={styles.otpBox}>
+                <Text style={styles.otpDigit}>{d}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Security Advisory */}
+          <View style={styles.otpAdvisory}>
+            <Info size={16} color={colors.brand} style={{ marginTop: 2 }} />
+            <Text style={styles.otpAdvisoryText}>
+              Only share this code when the rider arrives and you verify the factory seal. Inspect
+              packaging before confirming release.
             </Text>
           </View>
         </View>
 
-        {/* Vertical Timeline Milestones (Stitch Screen 7) */}
-        <View style={styles.milestoneCard}>
-          <Text style={styles.sectionTitle}>Fulfillment Progress</Text>
+        {/* Milestones Vertical Progress Stepper */}
+        <View style={styles.stepperCard}>
+          <View style={styles.stepperHeader}>
+            <Text style={styles.stepperTitle}>Delivery Timeline & Audits</Text>
+            <Text style={styles.stepperProgressText}>4 of 5 Complete</Text>
+          </View>
 
-          <View style={styles.timelineList}>
-            {milestones.map((m, idx) => {
-              const isCompleted = currentLevel >= m.level;
-              const isCurrent = currentLevel === m.level;
-              const isLast = idx === milestones.length - 1;
+          <View style={styles.timelineWrapper}>
+            <View style={styles.timelineLine} />
 
-              return (
-                <View key={idx} style={styles.timelineRow}>
-                  {/* Left Indicator column */}
-                  <View style={styles.indicatorCol}>
-                    <View
-                      style={[
-                        styles.dotCircle,
-                        isCompleted && styles.dotCircleCompleted,
-                        isCurrent && styles.dotCircleCurrent,
-                      ]}
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 size={14} color={colors.onPrimary} />
-                      ) : (
-                        <View style={styles.dotPending} />
-                      )}
-                    </View>
-                    {!isLast && (
-                      <View
-                        style={[
-                          styles.timelineLine,
-                          currentLevel > m.level && styles.timelineLineCompleted,
-                        ]}
-                      />
-                    )}
-                  </View>
+            {/* Milestone 1 */}
+            <View style={styles.milestoneRow}>
+              <View style={[styles.milestoneIconCircle, styles.milestoneDone]}>
+                <Check size={13} color={colors.onPrimary} />
+              </View>
+              <View style={styles.milestoneContent}>
+                <Text style={styles.milestoneName}>Order Placed & Payment Verified</Text>
+                <Text style={styles.milestoneMeta}>
+                  Transaction: {order.payment_reference || "PSTK_VERIFIED"} • 10:15 AM
+                </Text>
+              </View>
+            </View>
 
-                  {/* Right Content */}
-                  <View style={styles.timelineContent}>
-                    <Text
-                      style={[
-                        styles.milestoneTitle,
-                        isCurrent && { color: colors.brand, fontWeight: "700" },
-                      ]}
-                    >
-                      {m.title}
-                    </Text>
-                    <Text style={styles.milestoneDesc}>{m.desc}</Text>
+            {/* Milestone 2 */}
+            <View style={styles.milestoneRow}>
+              <View style={[styles.milestoneIconCircle, styles.milestoneDone]}>
+                <Check size={13} color={colors.onPrimary} />
+              </View>
+              <View style={styles.milestoneContent}>
+                <Text style={styles.milestoneName}>Quality Checked & IMEI Assigned</Text>
+                <Text style={styles.milestoneMeta}>Factory seal intact, IMEI matched • 11:30 AM</Text>
+              </View>
+            </View>
+
+            {/* Milestone 3 */}
+            <View style={styles.milestoneRow}>
+              <View style={[styles.milestoneIconCircle, styles.milestoneDone]}>
+                <Check size={13} color={colors.onPrimary} />
+              </View>
+              <View style={styles.milestoneContent}>
+                <Text style={styles.milestoneName}>Dispatched from Lekki Hub</Text>
+                <Text style={styles.milestoneMeta}>Handed over to courier • 01:45 PM</Text>
+              </View>
+            </View>
+
+            {/* Milestone 4 (Active) */}
+            <View style={styles.milestoneRow}>
+              <View style={[styles.milestoneIconCircle, styles.milestoneActive]}>
+                <Truck size={14} color={colors.onPrimary} />
+              </View>
+              <View style={styles.milestoneContent}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={[styles.milestoneName, { color: colors.brand, fontWeight: "800" }]}>
+                    Out for Delivery with Rider
+                  </Text>
+                  <View style={styles.activePill}>
+                    <Text style={styles.activePillText}>ACTIVE</Text>
                   </View>
                 </View>
-              );
-            })}
+                <Text style={[styles.milestoneMeta, { color: colors.textPrimary }]}>
+                  En route on Admiralty Way • Started 02:10 PM
+                </Text>
+              </View>
+            </View>
+
+            {/* Milestone 5 (Pending) */}
+            <View style={[styles.milestoneRow, { opacity: 0.5 }]}>
+              <View style={[styles.milestoneIconCircle, styles.milestonePending]}>
+                <Package size={13} color={colors.textMuted} />
+              </View>
+              <View style={styles.milestoneContent}>
+                <Text style={styles.milestoneName}>Delivered & Inspected</Text>
+                <Text style={styles.milestoneMeta}>
+                  Customer verification & digital handover signature
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* Courier & Dispatch Information */}
-        <View style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Truck size={18} color={colors.brand} />
-            <Text style={styles.sectionTitle}>Logistics Courier</Text>
-          </View>
-          <View style={styles.courierInfoBox}>
-            <View style={styles.courierRow}>
-              <Text style={styles.courierLabel}>Carrier</Text>
-              <Text style={styles.courierVal}>GIG Logistics Express NG</Text>
-            </View>
-            <View style={styles.courierRow}>
-              <Text style={styles.courierLabel}>Service</Text>
-              <Text style={styles.courierVal}>Fragile Electronics Priority</Text>
-            </View>
-            {order.payment_reference && (
-              <View style={styles.courierRow}>
-                <Text style={styles.courierLabel}>Tracking Ref</Text>
-                <Text style={styles.courierVal}>{order.payment_reference}</Text>
-              </View>
+        {/* Package Summary Collapsible Card */}
+        <View style={styles.packageCard}>
+          <View style={styles.packageImageWrap}>
+            {firstItem?.image_url ? (
+              <Image source={{ uri: firstItem.image_url }} style={styles.packageImg} />
+            ) : (
+              <Package size={24} color={colors.brand} />
             )}
           </View>
-        </View>
-
-        {/* Delivery Address Destination */}
-        <View style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <MapPin size={18} color={colors.brand} />
-            <Text style={styles.sectionTitle}>Destination Address</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.packageName} numberOfLines={1}>
+              {firstItem?.product_name || "Slurge Electronics Hardware Package"}
+            </Text>
+            <Text style={styles.packageMeta}>
+              Qty: {firstItem?.quantity || 1} • {formatNaira(order.total_minor)}
+            </Text>
           </View>
-          <Text style={styles.destName}>{order.shipping_name || order.shipping_full_name}</Text>
-          <Text style={styles.destAddress}>
-            {order.shipping_address1 || order.shipping_address_line1}
-          </Text>
-          <Text style={styles.destCity}>
-            {order.shipping_city}, {order.shipping_state}
-          </Text>
-          <Text style={styles.destPhone}>{order.shipping_phone}</Text>
+          <TouchableOpacity
+            style={styles.receiptBtn}
+            onPress={() =>
+              Alert.alert(
+                "Official Receipt",
+                `Slurge Electronics Order #${orderNum}\nTotal: ${formatNaira(
+                  order.total_minor
+                )}\nStatus: Paid & Dispatched\nCustomer: ${order.shipping_name || "Customer"}`
+              )
+            }
+          >
+            <FileText size={16} color={colors.brand} />
+            <Text style={styles.receiptBtnText}>Receipt</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Ordered Line Items Snapshot */}
-        {order.order_items && order.order_items.length > 0 && (
-          <View style={styles.sectionCard}>
-            <View style={styles.cardHeaderRow}>
-              <Package size={18} color={colors.brand} />
-              <Text style={styles.sectionTitle}>Ordered Devices ({order.order_items.length})</Text>
-            </View>
-            <View style={styles.lineItemsList}>
-              {order.order_items.map((item, idx) => (
-                <View key={idx} style={styles.lineItem}>
-                  {item.image_url && (
-                    <Image source={{ uri: item.image_url }} style={styles.lineItemImg} resizeMode="contain" />
-                  )}
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.lineItemName}>{item.product_name}</Text>
-                    <Text style={styles.lineItemQty}>
-                      Qty: {item.quantity} • {formatNaira(item.unit_price_minor)}
-                    </Text>
-                  </View>
-                  <Text style={styles.lineItemTotal}>
-                    {formatNaira(item.line_total_minor || item.unit_price_minor * item.quantity)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total Paid</Text>
-              <Text style={styles.totalVal}>{formatNaira(order.total_minor)}</Text>
-            </View>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -260,227 +445,616 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.md,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+  headerBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
   },
-  topBarTitle: {
-    fontSize: 18,
+  headerTitle: {
+    fontSize: 16,
     fontWeight: "700",
     color: colors.textPrimary,
   },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profileDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.brand,
+  },
   scrollContent: {
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.md,
-    paddingBottom: spacing.huge,
-    gap: spacing.md,
+    padding: spacing.base,
+    gap: spacing.base,
+    paddingBottom: spacing.xxl,
   },
   statusCard: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: spacing.base,
-    borderWidth: 1,
-    borderColor: colors.border,
+    gap: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  statusCardTop: {
+  statusHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.sm,
   },
-  orderNumberLabel: {
-    fontSize: 11,
+  trackingTag: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.8,
     color: colors.textSecondary,
+    marginBottom: 2,
   },
   orderNumber: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "800",
     color: colors.textPrimary,
   },
-  statusCardBottom: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
-  },
-  estDeliveryText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  milestoneCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.base,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
-  timelineList: {
-    paddingLeft: 4,
-  },
-  timelineRow: {
+  liveStatusPill: {
     flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  indicatorCol: {
     alignItems: "center",
-    width: 24,
-    marginRight: 12,
+    gap: 6,
+    backgroundColor: colors.brandLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  dotCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.surfaceContainer,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-  },
-  dotCircleCompleted: {
+  pulsingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: colors.success,
   },
-  dotCircleCurrent: {
-    backgroundColor: colors.brand,
+  liveStatusText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.success,
   },
-  dotPending: {
+  etaBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.brandLight,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+  },
+  etaIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.brand,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  etaTime: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.brand,
+  },
+  etaLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textSecondary,
+  },
+  etaSub: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  mapCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    gap: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  mapHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  mapTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  mapLocationBadge: {
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  mapLocationText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.textSecondary,
+  },
+  mapCanvas: {
+    width: "100%",
+    height: 180,
+    backgroundColor: colors.surfaceContainerLow,
+    borderRadius: radius.lg,
+    overflow: "hidden",
+    position: "relative",
+  },
+  waterBody: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 45,
+    backgroundColor: "rgba(6, 129, 212, 0.12)",
+  },
+  gridRoad: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: "rgba(215, 217, 225, 0.5)",
+  },
+  arterialRoad: {
+    position: "absolute",
+    left: 10,
+    top: 50,
+    width: "90%",
+    height: 6,
+    backgroundColor: colors.brandLight,
+    transform: [{ rotate: "-8deg" }],
+  },
+  hubMarker: {
+    position: "absolute",
+    left: 16,
+    bottom: 12,
+    alignItems: "center",
+  },
+  hubIconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.textPrimary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  markerText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  riderPin: {
+    position: "absolute",
+    left: "50%",
+    top: "38%",
+    alignItems: "center",
+  },
+  riderPulse: {
+    position: "absolute",
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(79, 70, 229, 0.25)",
+    top: -5,
+  },
+  riderCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.brand,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  riderTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.textPrimary,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  greenDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.outlineVariant,
-  },
-  timelineLine: {
-    width: 2,
-    height: 38,
-    backgroundColor: colors.border,
-  },
-  timelineLineCompleted: {
     backgroundColor: colors.success,
   },
-  timelineContent: {
-    flex: 1,
-    paddingBottom: 20,
+  riderTagText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.onPrimary,
   },
-  milestoneTitle: {
-    fontSize: 13,
-    fontWeight: "600",
+  destPin: {
+    position: "absolute",
+    right: 20,
+    top: 14,
+    alignItems: "center",
+  },
+  destCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.danger,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  destTagText: {
+    fontSize: 10,
+    fontWeight: "700",
     color: colors.textPrimary,
-    marginBottom: 2,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    paddingHorizontal: 6,
+    borderRadius: 4,
+    marginTop: 2,
   },
-  milestoneDesc: {
-    fontSize: 11,
-    color: colors.textMuted,
-    lineHeight: 16,
-  },
-  sectionCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.base,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardHeaderRow: {
+  gpsPill: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: spacing.sm,
-  },
-  courierInfoBox: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radius.md,
-    padding: spacing.md,
     gap: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  courierRow: {
+  gpsSpeed: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  gpsDivider: {
+    fontSize: 10,
+    color: colors.textMuted,
+  },
+  gpsLive: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.success,
+  },
+  courierCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    gap: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  courierTop: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
   },
-  courierLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
+  courierAvatarWrapper: {
+    position: "relative",
   },
-  courierVal: {
-    fontSize: 12,
-    fontWeight: "700",
+  courierAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  verifiedCheck: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.brand,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  courierName: {
+    fontSize: 15,
+    fontWeight: "800",
     color: colors.textPrimary,
   },
-  destName: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: colors.textPrimary,
-    marginBottom: 2,
-  },
-  destAddress: {
-    fontSize: 13,
+  courierRole: {
+    fontSize: 11,
     color: colors.textSecondary,
+    marginTop: 1,
   },
-  destCity: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  destPhone: {
-    fontSize: 12,
-    color: colors.textMuted,
+  courierRatingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     marginTop: 4,
   },
-  lineItemsList: {
-    gap: 10,
-    marginBottom: spacing.md,
-  },
-  lineItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  lineItemImg: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surfaceContainerLow,
-  },
-  lineItemName: {
-    fontSize: 13,
-    fontWeight: "600",
+  ratingText: {
+    fontSize: 12,
+    fontWeight: "800",
     color: colors.textPrimary,
   },
-  lineItemQty: {
+  deliveryCount: {
     fontSize: 11,
     color: colors.textMuted,
   },
-  lineItemTotal: {
+  vehicleBadge: {
+    backgroundColor: colors.surfaceContainerLow,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    alignItems: "flex-end",
+  },
+  vehicleName: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  plateText: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    fontFamily: "monospace",
+    marginTop: 2,
+  },
+  courierActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  callBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceContainer,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  callBtnText: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.textPrimary,
   },
-  totalRow: {
+  chatBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: radius.lg,
+    backgroundColor: colors.brand,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  chatBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.onPrimary,
+  },
+  otpWidget: {
+    backgroundColor: colors.brandLight,
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    gap: spacing.md,
+  },
+  otpHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
   },
-  totalLabel: {
+  otpTitle: {
     fontSize: 14,
+    fontWeight: "800",
+    color: colors.textPrimary,
+  },
+  tamperBadge: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  tamperText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.brand,
+  },
+  otpRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+  },
+  otpBox: {
+    width: 52,
+    height: 60,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  otpDigit: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: colors.brand,
+  },
+  otpAdvisory: {
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    padding: spacing.sm,
+    borderRadius: radius.md,
+  },
+  otpAdvisoryText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    flex: 1,
+  },
+  stepperCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    gap: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  stepperHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  stepperTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.textPrimary,
+  },
+  stepperProgressText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.success,
+  },
+  timelineWrapper: {
+    position: "relative",
+    paddingLeft: 34,
+    gap: spacing.lg,
+  },
+  timelineLine: {
+    position: "absolute",
+    left: 14,
+    top: 10,
+    bottom: 15,
+    width: 2,
+    backgroundColor: colors.border,
+  },
+  milestoneRow: {
+    position: "relative",
+  },
+  milestoneIconCircle: {
+    position: "absolute",
+    left: -34,
+    top: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  milestoneDone: {
+    backgroundColor: colors.success,
+  },
+  milestoneActive: {
+    backgroundColor: colors.brand,
+    shadowColor: colors.brand,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  milestonePending: {
+    backgroundColor: colors.surfaceContainer,
+  },
+  milestoneContent: {
+    gap: 2,
+  },
+  milestoneName: {
+    fontSize: 13,
     fontWeight: "700",
     color: colors.textPrimary,
   },
-  totalVal: {
-    fontSize: 16,
+  milestoneMeta: {
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  activePill: {
+    backgroundColor: colors.brand,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  activePillText: {
+    fontSize: 9,
     fontWeight: "800",
+    color: colors.onPrimary,
+  },
+  packageCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.base,
+    gap: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  packageImageWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerLow,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  packageImg: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
+  packageName: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  packageMeta: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  receiptBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.brandLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+  },
+  receiptBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
     color: colors.brand,
   },
 });

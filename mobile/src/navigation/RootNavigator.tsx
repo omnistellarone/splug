@@ -54,6 +54,23 @@ const linking: any = {
         routes: [{ name: "Main", state: { routes: [{ name: "Home" }] } }],
       };
     }
+    if (path.includes("payment-callback")) {
+      const matchRef = path.match(/[?&]reference=([^&]+)/);
+      const matchOrder = path.match(/[?&]orderId=([^&]+)/);
+      const isFailed = path.includes("failed=true");
+      return {
+        routes: [
+          {
+            name: "PaymentStatus",
+            params: {
+              reference: matchRef ? decodeURIComponent(matchRef[1]) : undefined,
+              orderId: matchOrder ? decodeURIComponent(matchOrder[1]) : undefined,
+              failed: isFailed,
+            },
+          },
+        ],
+      };
+    }
     const normalized = path.replace(/^\/?products\//, "product/");
     const { getStateFromPath: defaultGetStateFromPath } = require("@react-navigation/native");
     return defaultGetStateFromPath(normalized, options);

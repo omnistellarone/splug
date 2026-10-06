@@ -46,3 +46,6 @@ next-env.d.ts
 .vercel
 .env*
 *.apk
+
+stitch_designs/
+stitch_reference/
