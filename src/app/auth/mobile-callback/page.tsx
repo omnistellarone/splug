@@ -10,7 +10,15 @@ export default function MobileCallbackPage() {
       const payload = hash || search;
 
       // Forward directly into the native mobile app deep link
-      window.location.href = `slurge://auth/callback${payload}`;
+      const target = `slurge://auth/callback${payload}`;
+      try {
+        window.location.replace(target);
+      } catch {
+        window.location.href = target;
+      }
+      setTimeout(() => {
+        window.location.href = target;
+      }, 400);
     }
   }, []);
 

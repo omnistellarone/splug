@@ -31,7 +31,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking: any = {
-  prefixes: [Linking.createURL("/"), "slurge://"],
+  prefixes: [Linking.createURL("/"), "slurge://", "https://splug-teal.vercel.app"],
   config: {
     screens: {
       Main: {
@@ -48,7 +48,18 @@ const linking: any = {
       Auth: "auth",
     },
   },
+  getStateFromPath: (path: string, options: any) => {
+    if (path.includes("auth/callback")) {
+      return {
+        routes: [{ name: "Main", state: { routes: [{ name: "Home" }] } }],
+      };
+    }
+    const normalized = path.replace(/^\/?products\//, "product/");
+    const { getStateFromPath: defaultGetStateFromPath } = require("@react-navigation/native");
+    return defaultGetStateFromPath(normalized, options);
+  },
 };
+
 
 function MainTabs() {
   const { totals } = useCart();

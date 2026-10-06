@@ -91,6 +91,20 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setFormError(null);
+    const res = await signInWithGoogle();
+    if (res.success) {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate("Main", { screen: "Home" });
+      }
+    } else if (res.error && res.error !== "Google sign-in was cancelled") {
+      setFormError(res.error);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <KeyboardAvoidingView
@@ -286,7 +300,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Google OAuth Button */}
         <TouchableOpacity
           style={styles.googleBtn}
-          onPress={signInWithGoogle}
+          onPress={handleGoogleSignIn}
           disabled={isLoading}
           activeOpacity={0.85}
         >

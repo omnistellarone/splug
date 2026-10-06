@@ -38,10 +38,10 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   // Add Address Modal state
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
-  const [newFullName, setNewFullName] = useState<string>("Ebuka Nwosu");
-  const [newPhone, setNewPhone] = useState<string>("+234 803 123 4567");
-  const [newLine1, setNewLine1] = useState<string>("Plot 14 Admiralty Way, Lekki Phase 1");
-  const [newCity, setNewCity] = useState<string>("Lekki");
+  const [newFullName, setNewFullName] = useState<string>("");
+  const [newPhone, setNewPhone] = useState<string>("");
+  const [newLine1, setNewLine1] = useState<string>("");
+  const [newCity, setNewCity] = useState<string>("");
   const [newState, setNewState] = useState<string>("Lagos State");
   const [newIsDefault, setNewIsDefault] = useState<boolean>(true);
   const [isSavingAddress, setIsSavingAddress] = useState<boolean>(false);
@@ -52,8 +52,18 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const [currentReference, setCurrentReference] = useState<string | null>(null);
 
   useEffect(() => {
-    loadAddresses();
-  }, []);
+    if (user) {
+      loadAddresses();
+      if (!newFullName && (user.user_metadata?.full_name || (user as any).name)) {
+        setNewFullName(user.user_metadata?.full_name || (user as any).name || "");
+      }
+      if (!newPhone && user.phone) {
+        setNewPhone(user.phone);
+      }
+    } else {
+      setIsLoadingAddresses(false);
+    }
+  }, [user]);
 
   const loadAddresses = async () => {
     setIsLoadingAddresses(true);
@@ -73,7 +83,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   const handleSaveNewAddress = async () => {
     if (!newFullName.trim() || !newPhone.trim() || !newLine1.trim() || !newCity.trim()) {
-      Alert.alert("Missing Fields", "Please complete all address fields.");
+      Alert.alert("Missing Fields", "Please complete all address fields to proceed.");
       return;
     }
 
@@ -104,15 +114,44 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   };
 
   const handlePayWithPaystack = async () => {
-    const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
-
-    if (!selectedAddress) {
-      Alert.alert("Delivery Address Required", "Please select or add a delivery address.");
+    if (!user) {
+      Alert.alert(
+        "Sign In Required",
+        "Please sign in or create an account to proceed with checkout and receive your order updates.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Sign In",
+            onPress: () => navigation.navigate("Auth"),
+          },
+        ]
+      );
       return;
     }
 
     if (items.length === 0) {
-      Alert.alert("Cart is empty", "Add items to your cart before proceeding.");
+      Alert.alert("Cart is empty", "Add items to your cart before proceeding to checkout.");
+      return;
+    }
+
+    if (addresses.length === 0 || !selectedAddressId) {
+      Alert.alert(
+        "Delivery Address Required",
+        "Please add your delivery address to complete your order.",
+        [
+          {
+            text: "Add Address",
+            onPress: () => setShowAddressModal(true),
+          },
+        ]
+      );
+      setShowAddressModal(true);
+      return;
+    }
+
+    const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+    if (!selectedAddress) {
+      setShowAddressModal(true);
       return;
     }
 
@@ -146,20 +185,27 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   };
 
   const handleNavigationStateChange = (navState: { url: string }) => {
+    const url = navState.url;
+    const matchRef = url.match(/[?&](reference|trxref)=([^&]+)/);
+    const resolvedRef = matchRef ? decodeURIComponent(matchRef[2]) : currentReference;
+
     // Check if redirect contains verify or callback or checkout/success
     if (
-      navState.url.includes("payments/paystack/verify") ||
-      navState.url.includes("checkout/success") ||
-      navState.url.includes("slurge://payment-callback")
+      url.includes("payments/paystack/verify") ||
+      url.includes("checkout/success") ||
+      url.includes("slurge://payment-callback") ||
+      (url.includes("status=success") && !url.includes("checkout.paystack.com"))
     ) {
-      const ref = currentReference;
       setPaystackAuthUrl(null);
       clearCart();
-      navigation.replace("PaymentStatus", { reference: ref });
-    } else if (navState.url.includes("checkout/failure")) {
-      const ref = currentReference;
+      navigation.replace("PaymentStatus", { reference: resolvedRef || undefined });
+    } else if (
+      url.includes("checkout/failure") ||
+      url.includes("cancel") ||
+      url.includes("standard.paystack.co/close")
+    ) {
       setPaystackAuthUrl(null);
-      navigation.replace("PaymentStatus", { reference: ref, failed: true });
+      navigation.replace("PaymentStatus", { reference: resolvedRef || undefined, failed: true });
     }
   };
 
@@ -332,7 +378,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         <TouchableOpacity
           style={styles.payBtn}
           onPress={handlePayWithPaystack}
-          disabled={isInitializingPayment || addresses.length === 0}
+          disabled={isInitializingPayment}
           activeOpacity={0.85}
         >
           {isInitializingPayment ? (

@@ -87,7 +87,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
         </Text>
 
         <View style={styles.footerRow}>
-          <PriceText amountMinor={priceMinor} compareAtMinor={compareAtMinor} />
+          <View style={styles.priceContainer}>
+            <PriceText amountMinor={priceMinor} compareAtMinor={compareAtMinor} stacked />
+          </View>
 
           <TouchableOpacity
             style={[styles.addBtn, !inStock && styles.addBtnDisabled]}
@@ -120,7 +122,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: "100%",
-    height: 160,
+    height: 150,
     backgroundColor: colors.surfaceContainerLow,
     alignItems: "center",
     justifyContent: "center",
@@ -176,20 +178,29 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   details: {
-    padding: spacing.md,
+    padding: 10,
+    flex: 1,
+    justifyContent: "space-between",
   },
   title: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: colors.textPrimary,
     lineHeight: 18,
-    minHeight: 36,
-    marginBottom: spacing.sm,
+    height: 36,
+    marginBottom: spacing.xs,
   },
   footerRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
+    marginTop: "auto",
+    minHeight: 34,
+  },
+  priceContainer: {
+    flex: 1,
+    marginRight: 6,
+    justifyContent: "flex-end",
   },
   addBtn: {
     width: 32,
@@ -198,6 +209,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   addBtnDisabled: {
     backgroundColor: colors.outlineVariant,

@@ -73,6 +73,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(sessionData.session);
           }
         }
+
+        const matchCode = url.match(/[?&#]code=([^&]+)/);
+        if (matchCode) {
+          const code = decodeURIComponent(matchCode[1]);
+          const { data: sessionData } = await supabase.auth.exchangeCodeForSession(code);
+          if (sessionData.user) {
+            setUser(sessionData.user);
+            setSession(sessionData.session);
+          }
+        }
       } catch (err) {
         console.warn("Deep link auth error:", err);
       }
@@ -212,8 +222,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (accessToken) {
           const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
-            refreshToken: refreshToken || "",
-          } as any);
+            refresh_token: refreshToken || "",
+          });
           if (sessionError) return { success: false, error: sessionError.message };
           setUser(sessionData.user);
           setSession(sessionData.session);
