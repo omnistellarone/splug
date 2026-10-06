@@ -88,6 +88,26 @@ export const OrderTrackingScreen: React.FC<Props> = ({ route, navigation }) => {
   const orderNum = `SLG-${order.id.substring(0, 5).toUpperCase()}`;
   const firstItem = order.order_items?.[0];
 
+  const stage: number =
+    order.status === "delivered"
+      ? 5
+      : order.status === "shipped"
+      ? 4
+      : order.status === "processing"
+      ? 2
+      : order.status === "paid"
+      ? 2
+      : 1;
+
+  const statusLabel =
+    order.status === "delivered"
+      ? "Delivered"
+      : order.status === "shipped"
+      ? "Out for Delivery"
+      : order.status === "processing" || order.status === "paid"
+      ? "Processing & Quality Check"
+      : "Payment Confirmed";
+
   // Derive stable 4-digit PIN from order id
   const pinDigits = [
     (parseInt(order.id.charCodeAt(0).toString(), 10) % 9) + 1,
@@ -153,7 +173,7 @@ export const OrderTrackingScreen: React.FC<Props> = ({ route, navigation }) => {
             </View>
             <View style={styles.liveStatusPill}>
               <View style={styles.pulsingDot} />
-              <Text style={styles.liveStatusText}>Out for Delivery</Text>
+              <Text style={styles.liveStatusText}>{statusLabel}</Text>
             </View>
           </View>
 
@@ -325,13 +345,13 @@ export const OrderTrackingScreen: React.FC<Props> = ({ route, navigation }) => {
         <View style={styles.stepperCard}>
           <View style={styles.stepperHeader}>
             <Text style={styles.stepperTitle}>Delivery Timeline & Audits</Text>
-            <Text style={styles.stepperProgressText}>4 of 5 Complete</Text>
+            <Text style={styles.stepperProgressText}>{stage} of 5 Complete</Text>
           </View>
 
           <View style={styles.timelineWrapper}>
             <View style={styles.timelineLine} />
 
-            {/* Milestone 1 */}
+            {/* Milestone 1: Order Placed & Payment */}
             <View style={styles.milestoneRow}>
               <View style={[styles.milestoneIconCircle, styles.milestoneDone]}>
                 <Check size={13} color={colors.onPrimary} />
@@ -339,57 +359,144 @@ export const OrderTrackingScreen: React.FC<Props> = ({ route, navigation }) => {
               <View style={styles.milestoneContent}>
                 <Text style={styles.milestoneName}>Order Placed & Payment Verified</Text>
                 <Text style={styles.milestoneMeta}>
-                  Transaction: {order.payment_reference || "PSTK_VERIFIED"} • 10:15 AM
+                  Ref: {order.payment_reference || "PSTK_VERIFIED"} • Confirmed
                 </Text>
               </View>
             </View>
 
-            {/* Milestone 2 */}
-            <View style={styles.milestoneRow}>
-              <View style={[styles.milestoneIconCircle, styles.milestoneDone]}>
-                <Check size={13} color={colors.onPrimary} />
-              </View>
-              <View style={styles.milestoneContent}>
-                <Text style={styles.milestoneName}>Quality Checked & IMEI Assigned</Text>
-                <Text style={styles.milestoneMeta}>Factory seal intact, IMEI matched • 11:30 AM</Text>
-              </View>
-            </View>
-
-            {/* Milestone 3 */}
-            <View style={styles.milestoneRow}>
-              <View style={[styles.milestoneIconCircle, styles.milestoneDone]}>
-                <Check size={13} color={colors.onPrimary} />
-              </View>
-              <View style={styles.milestoneContent}>
-                <Text style={styles.milestoneName}>Dispatched from Lekki Hub</Text>
-                <Text style={styles.milestoneMeta}>Handed over to courier • 01:45 PM</Text>
-              </View>
-            </View>
-
-            {/* Milestone 4 (Active) */}
-            <View style={styles.milestoneRow}>
-              <View style={[styles.milestoneIconCircle, styles.milestoneActive]}>
-                <Truck size={14} color={colors.onPrimary} />
+            {/* Milestone 2: Quality Checked & IMEI */}
+            <View style={[styles.milestoneRow, stage < 2 && { opacity: 0.5 }]}>
+              <View
+                style={[
+                  styles.milestoneIconCircle,
+                  stage > 2
+                    ? styles.milestoneDone
+                    : stage === 2
+                    ? styles.milestoneActive
+                    : styles.milestonePending,
+                ]}
+              >
+                {stage > 2 ? (
+                  <Check size={13} color={colors.onPrimary} />
+                ) : stage === 2 ? (
+                  <Clock size={13} color={colors.onPrimary} />
+                ) : (
+                  <Package size={13} color={colors.textMuted} />
+                )}
               </View>
               <View style={styles.milestoneContent}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Text style={[styles.milestoneName, { color: colors.brand, fontWeight: "800" }]}>
-                    Out for Delivery with Rider
+                  <Text
+                    style={[
+                      styles.milestoneName,
+                      stage === 2 && { color: colors.brand, fontWeight: "800" },
+                    ]}
+                  >
+                    Quality Checked & IMEI Assigned
                   </Text>
-                  <View style={styles.activePill}>
-                    <Text style={styles.activePillText}>ACTIVE</Text>
-                  </View>
+                  {stage === 2 && (
+                    <View style={styles.activePill}>
+                      <Text style={styles.activePillText}>IN PROGRESS</Text>
+                    </View>
+                  )}
                 </View>
-                <Text style={[styles.milestoneMeta, { color: colors.textPrimary }]}>
-                  En route on Admiralty Way • Started 02:10 PM
-                </Text>
+                <Text style={styles.milestoneMeta}>Factory seal verified & IMEI registered</Text>
               </View>
             </View>
 
-            {/* Milestone 5 (Pending) */}
-            <View style={[styles.milestoneRow, { opacity: 0.5 }]}>
-              <View style={[styles.milestoneIconCircle, styles.milestonePending]}>
-                <Package size={13} color={colors.textMuted} />
+            {/* Milestone 3: Dispatched from Hub */}
+            <View style={[styles.milestoneRow, stage < 3 && { opacity: 0.5 }]}>
+              <View
+                style={[
+                  styles.milestoneIconCircle,
+                  stage > 3
+                    ? styles.milestoneDone
+                    : stage === 3
+                    ? styles.milestoneActive
+                    : styles.milestonePending,
+                ]}
+              >
+                {stage > 3 ? (
+                  <Check size={13} color={colors.onPrimary} />
+                ) : stage === 3 ? (
+                  <Truck size={13} color={colors.onPrimary} />
+                ) : (
+                  <Package size={13} color={colors.textMuted} />
+                )}
+              </View>
+              <View style={styles.milestoneContent}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text
+                    style={[
+                      styles.milestoneName,
+                      stage === 3 && { color: colors.brand, fontWeight: "800" },
+                    ]}
+                  >
+                    Dispatched from Lekki Hub
+                  </Text>
+                  {stage === 3 && (
+                    <View style={styles.activePill}>
+                      <Text style={styles.activePillText}>DISPATCHED</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.milestoneMeta}>Package sorted & handed over to courier</Text>
+              </View>
+            </View>
+
+            {/* Milestone 4: Out for Delivery */}
+            <View style={[styles.milestoneRow, stage < 4 && { opacity: 0.5 }]}>
+              <View
+                style={[
+                  styles.milestoneIconCircle,
+                  stage > 4
+                    ? styles.milestoneDone
+                    : stage === 4
+                    ? styles.milestoneActive
+                    : styles.milestonePending,
+                ]}
+              >
+                {stage > 4 ? (
+                  <Check size={13} color={colors.onPrimary} />
+                ) : stage === 4 ? (
+                  <Truck size={14} color={colors.onPrimary} />
+                ) : (
+                  <Package size={13} color={colors.textMuted} />
+                )}
+              </View>
+              <View style={styles.milestoneContent}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text
+                    style={[
+                      styles.milestoneName,
+                      stage === 4 && { color: colors.brand, fontWeight: "800" },
+                    ]}
+                  >
+                    Out for Delivery with Rider
+                  </Text>
+                  {stage === 4 && (
+                    <View style={styles.activePill}>
+                      <Text style={styles.activePillText}>ACTIVE</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.milestoneMeta}>En route to delivery address</Text>
+              </View>
+            </View>
+
+            {/* Milestone 5: Delivered */}
+            <View style={[styles.milestoneRow, stage < 5 && { opacity: 0.5 }]}>
+              <View
+                style={[
+                  styles.milestoneIconCircle,
+                  stage === 5 ? styles.milestoneDone : styles.milestonePending,
+                ]}
+              >
+                {stage === 5 ? (
+                  <Check size={13} color={colors.onPrimary} />
+                ) : (
+                  <Package size={13} color={colors.textMuted} />
+                )}
               </View>
               <View style={styles.milestoneContent}>
                 <Text style={styles.milestoneName}>Delivered & Inspected</Text>

@@ -187,37 +187,116 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     }
   };
 
+  const paystackInjectedJS = `
+    (function() {
+      if (window.__paystackListenerAttached) return;
+      window.__paystackListenerAttached = true;
+      var notified = false;
+
+      function notifySuccess(ref) {
+        if (notified) return;
+        notified = true;
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'PAYSTACK_SUCCESS', reference: ref || '' }));
+        }
+      }
+
+      // 1. Listen for Paystack's cross-window postMessage events
+      window.addEventListener('message', function(event) {
+        try {
+          var data = event.data;
+          if (typeof data === 'string') {
+            try { data = JSON.parse(data); } catch(e) {}
+          }
+          if (data && (data.event === 'successful' || data.status === 'success' || data.trxref || data.reference)) {
+            notifySuccess(data.reference || data.trxref || '');
+          }
+        } catch(e) {}
+      });
+
+      // 2. Poll DOM for Paystack success indicators
+      var interval = setInterval(function() {
+        if (notified) {
+          clearInterval(interval);
+          return;
+        }
+        var body = document.body ? (document.body.innerText || "") : "";
+        var bodyLower = body.toLowerCase();
+        if (
+          bodyLower.indexOf("payment successful") !== -1 ||
+          bodyLower.indexOf("payment completed") !== -1 ||
+          bodyLower.indexOf("transaction successful") !== -1 ||
+          (bodyLower.indexOf("successful") !== -1 && (bodyLower.indexOf("reference") !== -1 || bodyLower.indexOf("paid") !== -1 || bodyLower.indexOf("naira") !== -1))
+        ) {
+          notifySuccess('');
+        }
+      }, 500);
+
+      // 3. Intercept click on any Close or Done buttons in Paystack success screen
+      document.addEventListener('click', function(e) {
+        var el = e.target;
+        if (el) {
+          var text = (el.innerText || el.textContent || "").toLowerCase();
+          if (text.indexOf("close") !== -1 || text.indexOf("done") !== -1 || text.indexOf("return") !== -1) {
+            notifySuccess('');
+          }
+        }
+      }, true);
+    })();
+    true;
+  `;
+
+  const handleCompleteAndGoToOrders = async (ref?: string) => {
+    setPaystackAuthUrl(null);
+    clearCart();
+    const referenceToVerify = ref || currentReference;
+    if (referenceToVerify) {
+      try {
+        await api.verifyPayment(referenceToVerify);
+      } catch {
+        // webhook handles settlement
+      }
+    }
+    navigation.navigate("Main", { screen: "Account" });
+  };
+
+  const handleWebViewMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data && (data.type === "PAYSTACK_SUCCESS" || data.event === "successful" || data.status === "success")) {
+        handleCompleteAndGoToOrders(data.reference);
+      }
+    } catch {
+      const raw = event.nativeEvent.data;
+      if (raw && (raw.includes("SUCCESS") || raw.includes("success"))) {
+        handleCompleteAndGoToOrders();
+      }
+    }
+  };
+
   const handleInterceptPaymentUrl = (url: string) => {
     if (!url) return true;
-    const matchRef = url.match(/[?&](reference|trxref)=([^&]+)/);
-    const resolvedRef = matchRef ? decodeURIComponent(matchRef[2]) : currentReference;
-    const matchOrder = url.match(/[?&]orderId=([^&]+)/);
-    const resolvedOrder = matchOrder ? decodeURIComponent(matchOrder[1]) : undefined;
 
-    // Intercept Paystack completion, success callback, or deep link
-    if (
+    // Check if URL represents payment completion or callback
+    const isCompleted =
       url.startsWith("slurge://payment-callback") ||
       url.includes("payment-callback") ||
       url.includes("payments/paystack/verify") ||
       url.includes("checkout/success") ||
-      (url.includes("status=success") && !url.includes("checkout.paystack.com")) ||
-      (url.includes("reference=") && !url.includes("checkout.paystack.com") && !url.includes("standard.paystack.co"))
-    ) {
-      setPaystackAuthUrl(null);
-      clearCart();
-      navigation.replace("PaymentStatus", {
-        reference: resolvedRef || undefined,
-        orderId: resolvedOrder,
-      });
+      url.includes("standard.paystack.co/close") ||
+      url.includes("status=success") ||
+      (url.includes("trxref=") && !url.includes("checkout.paystack.com/pay/"));
+
+    if (isCompleted) {
+      handleCompleteAndGoToOrders();
       return false;
     } else if (
       url.includes("checkout/failure") ||
-      url.includes("cancel") ||
-      url.includes("standard.paystack.co/close")
+      url.includes("cancel")
     ) {
       setPaystackAuthUrl(null);
       navigation.replace("PaymentStatus", {
-        reference: resolvedRef || undefined,
+        reference: currentReference || undefined,
         failed: true,
       });
       return false;
@@ -523,15 +602,26 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     { text: "Exit", onPress: () => setPaystackAuthUrl(null) },
                   ]);
                 }}
+                style={{ padding: 4 }}
               >
                 <X size={20} color={colors.textPrimary} />
               </TouchableOpacity>
               <Text style={styles.webViewTitle}>Paystack Secure Payment</Text>
-              <View style={{ width: 20 }} />
+              <TouchableOpacity
+                onPress={() => handleCompleteAndGoToOrders()}
+                style={styles.doneBtn}
+                activeOpacity={0.8}
+              >
+                <CheckCircle2 size={13} color={colors.onPrimary} />
+                <Text style={styles.doneBtnText}>I've Paid</Text>
+              </TouchableOpacity>
             </View>
 
             <WebView
               source={{ uri: paystackAuthUrl }}
+              injectedJavaScriptBeforeContentLoaded={paystackInjectedJS}
+              injectedJavaScript={paystackInjectedJS}
+              onMessage={handleWebViewMessage}
               onShouldStartLoadWithRequest={(req) => handleInterceptPaymentUrl(req.url)}
               onNavigationStateChange={(nav) => handleInterceptPaymentUrl(nav.url)}
               startInLoadingState
@@ -959,6 +1049,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  doneBtn: {
+    backgroundColor: colors.success,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  doneBtnText: {
+    color: colors.onPrimary,
+    fontSize: 12,
+    fontWeight: "700",
   },
   webViewTitle: {
     fontSize: 15,

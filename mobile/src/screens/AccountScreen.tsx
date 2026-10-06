@@ -10,8 +10,10 @@ import {
   Image,
   Linking,
   Switch,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useIsFocused } from "@react-navigation/native";
 import { colors, radius, spacing } from "@/theme/tokens";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
@@ -45,13 +47,15 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   const { totals, addToCart } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [biometricsEnabled, setBiometricsEnabled] = useState<boolean>(rememberDevice);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    if (user) {
+    if (user && isFocused) {
       loadOrders();
     }
-  }, [user]);
+  }, [user, isFocused]);
 
   const loadOrders = async () => {
     setIsLoadingOrders(true);
@@ -65,6 +69,12 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     } finally {
       setIsLoadingOrders(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadOrders();
+    setRefreshing(false);
   };
 
   const handleSignOut = async () => {
@@ -83,14 +93,18 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
   const activeOrder = orders.find(
     (o) => o.status === "paid" || o.status === "processing" || o.status === "shipped" || o.status === "pending"
-  ) || orders[0];
+  );
 
-  const pastOrders = orders.filter((o) => o.id !== activeOrder?.id);
+  const pastOrders = activeOrder ? orders.filter((o) => o.id !== activeOrder.id) : orders;
 
   const displayName =
     user?.user_metadata?.full_name ||
-    user?.email?.split("@")[0] ||
-    "Adaobi Nnamdi";
+    (user?.email ? user.email.split("@")[0] : "New Customer");
+
+  const displayEmail = user?.email || "No email connected";
+  const displayPhone = user?.user_metadata?.phone || "No phone added yet";
+  const membershipTier =
+    orders.length >= 5 ? "Slurge VIP Platinum" : orders.length >= 2 ? "Slurge VIP Gold" : "Slurge Member";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -138,7 +152,18 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.brand]}
+            tintColor={colors.brand}
+          />
+        }
+      >
         {/* User Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
@@ -155,12 +180,10 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               <Text style={styles.userName}>{displayName}</Text>
               <View style={styles.vipBadge}>
                 <Award size={12} color={colors.brand} />
-                <Text style={styles.vipBadgeText}>Slurge VIP Platinum</Text>
+                <Text style={styles.vipBadgeText}>{membershipTier}</Text>
               </View>
-              <Text style={styles.userEmail}>{user?.email || "customer@slurge.ng"}</Text>
-              <Text style={styles.userPhone}>
-                {user?.user_metadata?.phone || "+234 812 345 6789"}
-              </Text>
+              <Text style={styles.userEmail}>{displayEmail}</Text>
+              <Text style={styles.userPhone}>{displayPhone}</Text>
             </View>
           </View>
 
@@ -168,16 +191,16 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           <View style={styles.bentoBar}>
             <View style={styles.bentoCol}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Text style={styles.bentoVal}>{orders.length || 4}</Text>
-                <View style={styles.activeDot} />
+                <Text style={styles.bentoVal}>{orders.length}</Text>
+                {activeOrder && <View style={styles.activeDot} />}
               </View>
-              <Text style={styles.bentoLabel}>Orders (1 Act.)</Text>
+              <Text style={styles.bentoLabel}>Orders ({activeOrder ? "1 Act." : "0 Act."})</Text>
             </View>
 
             <View style={styles.bentoDivider} />
 
             <View style={styles.bentoCol}>
-              <Text style={styles.bentoVal}>6</Text>
+              <Text style={styles.bentoVal}>0</Text>
               <Text style={styles.bentoLabel}>Saved Items</Text>
             </View>
 
@@ -186,7 +209,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             <View style={styles.bentoCol}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <ShieldCheck size={14} color={colors.brand} />
-                <Text style={styles.bentoVal}>2</Text>
+                <Text style={styles.bentoVal}>{orders.length > 0 ? orders.length : 0}</Text>
               </View>
               <Text style={styles.bentoLabel}>IMEI Reg.</Text>
             </View>
@@ -194,12 +217,16 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         </View>
 
         {/* Active Order Spotlight Card */}
-        {activeOrder && (
+        {activeOrder ? (
           <View style={styles.spotlightSection}>
             <View style={styles.spotlightHeader}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <View style={[styles.activeDot, { width: 8, height: 8 }]} />
-                <Text style={styles.spotlightTag}>IN-TRANSIT SHIPMENT</Text>
+                <Text style={styles.spotlightTag}>
+                  {activeOrder.status === "shipped"
+                    ? "IN-TRANSIT SHIPMENT"
+                    : "ACTIVE ORDER"}
+                </Text>
               </View>
               <Text style={styles.priorityText}>Priority Express</Text>
             </View>
@@ -227,16 +254,24 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                     </Text>
                     <View style={styles.statusPill}>
                       <View style={[styles.activeDot, { width: 6, height: 6 }]} />
-                      <Text style={styles.statusPillText}>Out for Delivery</Text>
+                      <Text style={styles.statusPillText}>
+                        {activeOrder.status === "shipped"
+                          ? "Out for Delivery"
+                          : activeOrder.status === "paid" || activeOrder.status === "processing"
+                          ? "Processing & Inspection"
+                          : "Order Confirmed"}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.spotlightTitle} numberOfLines={1}>
-                    {activeOrder.order_items?.[0]?.product_name || "iPhone 16 Pro Max • 256GB"}
+                    {activeOrder.order_items?.[0]?.product_name || "Slurge Hardware Package"}
                   </Text>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
                     <Clock size={14} color={colors.brand} />
-                    <Text style={styles.etaText}>ETA: ~35 mins</Text>
-                    <Text style={styles.etaSub}>• Lekki Dispatch</Text>
+                    <Text style={styles.etaText}>
+                      Total: {formatNaira(activeOrder.total_minor)}
+                    </Text>
+                    <Text style={styles.etaSub}>• Lagos Dispatch</Text>
                   </View>
                 </View>
               </View>
@@ -246,12 +281,27 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                     <Truck size={12} color={colors.brand} />
-                    <Text style={styles.riderText}>Dispatch Rider (Musa B.)</Text>
+                    <Text style={styles.riderText}>
+                      {activeOrder.status === "shipped"
+                        ? "Courier En Route"
+                        : "Lekki Fulfillment Center"}
+                    </Text>
                   </View>
-                  <Text style={styles.pointText}>Lekki Toll Gate Point</Text>
+                  <Text style={styles.pointText}>
+                    {activeOrder.status === "shipped"
+                      ? "Dispatched"
+                      : "Verified & Packaging"}
+                  </Text>
                 </View>
                 <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: "80%" }]} />
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        width: activeOrder.status === "shipped" ? "80%" : "45%",
+                      },
+                    ]}
+                  />
                 </View>
               </View>
 
@@ -276,132 +326,122 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               </View>
             </View>
           </View>
-        )}
-
-        {/* Past Orders Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={styles.sectionTitle}>Past Orders</Text>
-            <TouchableOpacity onPress={loadOrders}>
-              <Text style={styles.sectionLink}>View All ({orders.length || 4})</Text>
+        ) : orders.length === 0 && !isLoadingOrders ? (
+          <View style={styles.emptyOrdersCard}>
+            <View style={styles.emptyIconCircle}>
+              <Package size={28} color={colors.brand} />
+            </View>
+            <Text style={styles.emptyTitle}>No Orders Yet</Text>
+            <Text style={styles.emptySubtitle}>
+              You have no active orders yet. When you make a purchase, your real-time delivery milestones and IMEI tracking will appear here.
+            </Text>
+            <TouchableOpacity
+              style={styles.startShoppingBtn}
+              onPress={() => navigation.navigate("Main", { screen: "Home" })}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.startShoppingBtnText}>Browse Electronics Catalog</Text>
             </TouchableOpacity>
           </View>
+        ) : null}
 
-          {isLoadingOrders ? (
-            <ActivityIndicator size="small" color={colors.brand} style={{ padding: 16 }} />
-          ) : pastOrders.length > 0 ? (
-            pastOrders.map((ord) => {
-              const item = ord.order_items?.[0];
-              return (
-                <View key={ord.id} style={styles.pastOrderCard}>
-                  <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "center" }}>
-                    <View style={styles.pastOrderImgWrap}>
-                      {item?.image_url ? (
-                        <Image source={{ uri: item.image_url }} style={styles.pastOrderImg} />
-                      ) : (
-                        <Package size={22} color={colors.brand} />
-                      )}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text style={styles.pastOrderNum}>#SLG-{ord.id.substring(0, 5).toUpperCase()}</Text>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                          <CheckCircle2 size={12} color={colors.success} />
-                          <Text style={styles.deliveredText}>Delivered</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.pastOrderName} numberOfLines={1}>
-                        {item?.product_name || "Infinix Fast Charger 45W Type-C"}
-                      </Text>
-                      <Text style={styles.pastOrderPrice}>{formatNaira(ord.total_minor)}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.pastOrderActions}>
-                    <TouchableOpacity
-                      style={styles.invoiceBtn}
-                      onPress={() =>
-                        Alert.alert(
-                          "Invoice PDF",
-                          `Official Tax Invoice #SLG-${ord.id.substring(0, 5).toUpperCase()}\nAmount: ${formatNaira(
-                            ord.total_minor
-                          )}\nStatus: Settled`
-                        )
-                      }
-                    >
-                      <FileText size={14} color={colors.textSecondary} />
-                      <Text style={styles.invoiceBtnText}>Invoice (PDF)</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.buyAgainBtn}
-                      onPress={() => {
-                        if (item?.variant_id) {
-                          addToCart(
-                            {
-                              variantId: item.variant_id,
-                              productId: item.variant_id,
-                              productName: item.product_name,
-                              variantSku: item.variant_sku || "SKU-REORDER",
-                              variantOptions: item.variant_options || {},
-                              priceMinor: item.unit_price_minor,
-                              image: item.image_url,
-                              maxStock: 99,
-                            },
-                            1
-                          );
-                          Alert.alert("Item Added", "Re-added to your shopping bag!");
-                        } else {
-                          navigation.navigate("Main", { screen: "Home" });
-                        }
-                      }}
-                    >
-                      <RotateCcw size={14} color={colors.brand} />
-                      <Text style={styles.buyAgainText}>Buy Again</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })
-          ) : (
-            <View style={styles.pastOrderCard}>
-              <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "center" }}>
-                <View style={styles.pastOrderImgWrap}>
-                  <Package size={22} color={colors.brand} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <Text style={styles.pastOrderNum}>#SLG-89104</Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                      <CheckCircle2 size={12} color={colors.success} />
-                      <Text style={styles.deliveredText}>Delivered 12 Feb</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.pastOrderName}>Infinix Fast Charger 45W Type-C</Text>
-                  <Text style={styles.pastOrderPrice}>₦15,000</Text>
-                </View>
-              </View>
-
-              <View style={styles.pastOrderActions}>
-                <TouchableOpacity
-                  style={styles.invoiceBtn}
-                  onPress={() => Alert.alert("Invoice PDF", "Downloading invoice for #SLG-89104...")}
-                >
-                  <FileText size={14} color={colors.textSecondary} />
-                  <Text style={styles.invoiceBtnText}>Invoice (PDF)</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.buyAgainBtn}
-                  onPress={() => navigation.navigate("Main", { screen: "Home" })}
-                >
-                  <RotateCcw size={14} color={colors.brand} />
-                  <Text style={styles.buyAgainText}>Buy Again</Text>
-                </TouchableOpacity>
-              </View>
+        {/* Past Orders Section */}
+        {orders.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Past Orders</Text>
+              <TouchableOpacity onPress={loadOrders}>
+                <Text style={styles.sectionLink}>View All ({orders.length})</Text>
+              </TouchableOpacity>
             </View>
-          )}
-        </View>
+
+            {isLoadingOrders ? (
+              <ActivityIndicator size="small" color={colors.brand} style={{ padding: 16 }} />
+            ) : pastOrders.length > 0 ? (
+              pastOrders.map((ord) => {
+                const item = ord.order_items?.[0];
+                return (
+                  <View key={ord.id} style={styles.pastOrderCard}>
+                    <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "center" }}>
+                      <View style={styles.pastOrderImgWrap}>
+                        {item?.image_url ? (
+                          <Image source={{ uri: item.image_url }} style={styles.pastOrderImg} />
+                        ) : (
+                          <Package size={22} color={colors.brand} />
+                        )}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                          <Text style={styles.pastOrderNum}>#SLG-{ord.id.substring(0, 5).toUpperCase()}</Text>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                            <CheckCircle2 size={12} color={colors.success} />
+                            <Text style={styles.deliveredText}>
+                              {ord.status === "delivered" ? "Delivered" : ord.status}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text style={styles.pastOrderName} numberOfLines={1}>
+                          {item?.product_name || "Slurge Electronics Item"}
+                        </Text>
+                        <Text style={styles.pastOrderPrice}>{formatNaira(ord.total_minor)}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.pastOrderActions}>
+                      <TouchableOpacity
+                        style={styles.invoiceBtn}
+                        onPress={() =>
+                          Alert.alert(
+                            "Invoice PDF",
+                            `Official Tax Invoice #SLG-${ord.id.substring(0, 5).toUpperCase()}\nAmount: ${formatNaira(
+                              ord.total_minor
+                            )}\nStatus: Settled`
+                          )
+                        }
+                      >
+                        <FileText size={14} color={colors.textSecondary} />
+                        <Text style={styles.invoiceBtnText}>Invoice (PDF)</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.buyAgainBtn}
+                        onPress={() => {
+                          if (item?.variant_id) {
+                            addToCart(
+                              {
+                                variantId: item.variant_id,
+                                productId: item.variant_id,
+                                productName: item.product_name,
+                                variantSku: item.variant_sku || "SKU-REORDER",
+                                variantOptions: item.variant_options || {},
+                                priceMinor: item.unit_price_minor,
+                                image: item.image_url,
+                                maxStock: 99,
+                              },
+                              1
+                            );
+                            Alert.alert("Item Added", "Re-added to your shopping bag!");
+                          } else {
+                            navigation.navigate("Main", { screen: "Home" });
+                          }
+                        }}
+                      >
+                        <RotateCcw size={14} color={colors.brand} />
+                        <Text style={styles.buyAgainText}>Buy Again</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })
+            ) : (
+              <View style={styles.emptyPastOrderBox}>
+                <Text style={styles.emptyPastOrderText}>
+                  Your active order is tracked above. Previous completed purchases will appear here.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Account & Preferences Menu */}
         <View style={styles.section}>
@@ -418,7 +458,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.menuTitle}>Delivery Addresses</Text>
-                <Text style={styles.menuSub}>2 Saved: Lekki Phase 1, Victoria Island</Text>
+                <Text style={styles.menuSub}>Manage saved delivery locations</Text>
               </View>
               <ChevronRight size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -430,8 +470,8 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               style={styles.menuItem}
               onPress={() =>
                 Alert.alert(
-                  "Saved Cards",
-                  "Mastercard ending in ••8291 is securely tokenized with Paystack."
+                  "Payment Security",
+                  "All payments are securely tokenized and processed via Paystack."
                 )
               }
               activeOpacity={0.7}
@@ -446,7 +486,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                     <Text style={styles.paystackTagText}>Paystack</Text>
                   </View>
                 </View>
-                <Text style={styles.menuSub}>Mastercard ending in ••8291 (Tokenized)</Text>
+                <Text style={styles.menuSub}>Encrypted card tokenization</Text>
               </View>
               <ChevronRight size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -459,7 +499,9 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               onPress={() =>
                 Alert.alert(
                   "Official Warranties",
-                  "2 Active Warranties:\n- AppleCare+ (Valid to 2027)\n- Slurge Shield Replacement Guarantee"
+                  orders.length > 0
+                    ? `${orders.length} Registered warranty under your Slurge account.`
+                    : "Official manufacturer warranties and Slurge Shield apply automatically to all hardware purchases."
                 )
               }
               activeOpacity={0.7}
@@ -470,9 +512,13 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                   <Text style={styles.menuTitle}>Official Warranties & Certs</Text>
-                  <View style={[styles.activeDot, { width: 6, height: 6 }]} />
+                  {orders.length > 0 && <View style={[styles.activeDot, { width: 6, height: 6 }]} />}
                 </View>
-                <Text style={styles.menuSub}>2 Active AppleCare+ & Slurge Shield</Text>
+                <Text style={styles.menuSub}>
+                  {orders.length > 0
+                    ? `${orders.length} Active Warranty on hardware`
+                    : "Manufacturer warranties apply on purchase"}
+                </Text>
               </View>
               <ChevronRight size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -1007,5 +1053,66 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: "800",
     color: "#0681D4",
+  },
+  emptyOrdersCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    marginVertical: spacing.sm,
+  },
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+  },
+  startShoppingBtn: {
+    backgroundColor: colors.brand,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+  },
+  startShoppingBtnText: {
+    color: colors.onPrimary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  emptyPastOrderBox: {
+    padding: spacing.base,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+  },
+  emptyPastOrderText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: "center",
   },
 });
