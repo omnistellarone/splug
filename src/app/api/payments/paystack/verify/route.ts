@@ -15,7 +15,17 @@ export async function GET(request: NextRequest) {
     ? `${proto}://${host}`
     : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+  const wantsJson =
+    request.headers.get("accept")?.includes("application/json") ||
+    searchParams.get("format") === "json";
+
   if (!reference) {
+    if (wantsJson) {
+      return NextResponse.json(
+        { success: false, error: "Missing transaction reference" },
+        { status: 400 }
+      );
+    }
     return NextResponse.redirect(
       new URL("/checkout/failure?reason=missing_reference", appUrl)
     );
@@ -29,6 +39,17 @@ export async function GET(request: NextRequest) {
       console.warn(
         `[Paystack Verify] Reference ${reference} status: ${verification.data.status}`
       );
+      if (wantsJson) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Payment not completed or failed",
+            status: verification.data.status,
+            reference,
+          },
+          { status: 400 }
+        );
+      }
       return NextResponse.redirect(
         new URL(
           `/checkout/failure?ref=${encodeURIComponent(reference)}&reason=${encodeURIComponent(
@@ -60,6 +81,16 @@ export async function GET(request: NextRequest) {
       console.error(
         `[Paystack Verify] Order not found for reference ${reference}`
       );
+      if (wantsJson) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Order not found for transaction reference",
+            reference,
+          },
+          { status: 404 }
+        );
+      }
       return NextResponse.redirect(
         new URL(
           `/checkout/failure?ref=${encodeURIComponent(reference)}&reason=order_not_found`,
@@ -206,7 +237,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 5. Redirect to customer order confirmation screen
+    // 5. Return JSON for mobile or redirect to customer order confirmation screen
+    if (wantsJson) {
+      return NextResponse.json({
+        success: true,
+        message: "Payment verified successfully",
+        orderId: order.id,
+        reference,
+        status: "paid",
+        amountMinor: order.total_minor,
+      });
+    }
+
     return NextResponse.redirect(
       new URL(
         `/checkout/success?ref=${encodeURIComponent(reference)}&orderId=${order.id}`,
@@ -215,6 +257,16 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("[Paystack Verify] Unexpected error during verification:", error);
+    if (wantsJson) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unexpected error during payment verification",
+          reference,
+        },
+        { status: 500 }
+      );
+    }
     return NextResponse.redirect(
       new URL(
         `/checkout/failure?ref=${encodeURIComponent(reference)}&reason=verification_error`,

@@ -1,26 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getDatabaseCartAction } from "@/lib/cart/actions";
+import { getAuthenticatedContext } from "@/lib/auth/server-auth";
 import { calculateCartTotals } from "@/lib/cart/merge";
 import { getStoreSettingsAction } from "@/lib/settings/actions";
+import type { CartItem } from "@/lib/cart/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-async function getAuthUser(request: NextRequest) {
-  const supabase = await createClient();
-  const authHeader = request.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.substring(7);
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-    if (!error && user) return { supabase, user };
+interface DbCartItemRecord {
+  id: string;
+  variant_id: string;
+  quantity: number;
+  variant: {
+    id: string;
+    product_id: string;
+    sku: string;
+    price_minor: number;
+    options: Record<string, string>;
+    stock: number;
+    is_active: boolean;
+    product: {
+      name: string;
+      images: Array<{ storage_path: string; is_primary: boolean }>;
+    };
+  };
+}
+
+async function getUserCartItems(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<CartItem[]> {
+  const { data, error } = await supabase
+    .from("cart_items")
+    .select(`
+      id,
+      variant_id,
+      quantity,
+      variant:product_variants (
+        id,
+        product_id,
+        sku,
+        price_minor,
+        options,
+        stock,
+        is_active,
+        product:products (
+          name,
+          images:product_images (storage_path, is_primary)
+        )
+      )
+    `)
+    .eq("user_id", userId);
+
+  if (error || !data) return [];
+
+  const validItems: CartItem[] = [];
+  for (const raw of data as unknown as DbCartItemRecord[]) {
+    if (!raw.variant || !raw.variant.is_active) continue;
+
+    const img =
+      raw.variant.product?.images?.find((i) => i.is_primary)?.storage_path ||
+      raw.variant.product?.images?.[0]?.storage_path;
+
+    validItems.push({
+      variantId: raw.variant.id,
+      productId: raw.variant.product_id,
+      productName: raw.variant.product?.name || "Product",
+      variantSku: raw.variant.sku,
+      variantOptions: raw.variant.options || {},
+      priceMinor: raw.variant.price_minor,
+      image: img,
+      quantity: Math.min(raw.quantity, raw.variant.stock),
+      maxStock: raw.variant.stock,
+    });
   }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { supabase, user };
+
+  return validItems;
 }
 
 /**
@@ -29,7 +84,7 @@ async function getAuthUser(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await getAuthUser(request);
+    const { supabase, user } = await getAuthenticatedContext(request);
 
     if (!user) {
       return NextResponse.json(
@@ -38,7 +93,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const items = (await getDatabaseCartAction()) || [];
+    const items = await getUserCartItems(supabase, user.id);
     const settings = await getStoreSettingsAction();
     const totals = calculateCartTotals(items, settings.freeShippingThresholdMinor);
 
@@ -66,7 +121,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { supabase, user } = await getAuthUser(request);
+    const { supabase, user } = await getAuthenticatedContext(request);
 
     if (!user) {
       return NextResponse.json(
@@ -125,7 +180,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const updatedItems = (await getDatabaseCartAction()) || [];
+    const updatedItems = await getUserCartItems(supabase, user.id);
     const settings = await getStoreSettingsAction();
     const totals = calculateCartTotals(updatedItems, settings.freeShippingThresholdMinor);
 
@@ -154,7 +209,7 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const { supabase, user } = await getAuthUser(request);
+    const { supabase, user } = await getAuthenticatedContext(request);
 
     if (!user) {
       return NextResponse.json(
@@ -191,7 +246,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const updatedItems = (await getDatabaseCartAction()) || [];
+    const updatedItems = await getUserCartItems(supabase, user.id);
     const settings = await getStoreSettingsAction();
     const totals = calculateCartTotals(updatedItems, settings.freeShippingThresholdMinor);
 

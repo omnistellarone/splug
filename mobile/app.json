@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Slurge Electronics",
+    "slug": "slurge-electronics",
+    "scheme": "slurge",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#f8f9fd",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.slurge.electronics"
+    },
+    "android": {
+      "package": "com.slurge.electronics",
+      "adaptiveIcon": {
+        "backgroundColor": "#3525cd",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser"
+    ]
+  }
+}

@@ -1,24 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedContext } from "@/lib/auth/server-auth";
 
 export const dynamic = "force-dynamic";
-
-async function getAuthUser(request: NextRequest) {
-  const supabase = await createClient();
-  const authHeader = request.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.substring(7);
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-    if (!error && user) return { supabase, user };
-  }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { supabase, user };
-}
 
 /**
  * GET /api/orders
@@ -26,7 +9,7 @@ async function getAuthUser(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const { supabase, user } = await getAuthUser(request);
+    const { supabase, user } = await getAuthenticatedContext(request);
 
     if (!user) {
       return NextResponse.json(

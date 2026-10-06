@@ -215,16 +215,32 @@ export async function validateCouponAction(
   };
 }
 
+import type { User, SupabaseClient } from "@supabase/supabase-js";
+
 /**
  * Authoritative checkout order creator & Paystack initializer — AGENTS.md §15, §16
  */
 export async function initializeCheckoutOrderAction(
-  params: CreateOrderParams
+  params: CreateOrderParams,
+  options?: {
+    user?: User | null;
+    supabase?: SupabaseClient;
+    callbackUrl?: string;
+  }
 ): Promise<CheckoutInitResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let supabase: SupabaseClient;
+  let user: User | null = null;
+
+  if (options?.supabase && options?.user) {
+    supabase = options.supabase;
+    user = options.user;
+  } else {
+    supabase = (await createClient()) as unknown as SupabaseClient;
+    const {
+      data: { user: dbUser },
+    } = await supabase.auth.getUser();
+    user = dbUser;
+  }
 
   if (!user) {
     return {
@@ -429,7 +445,7 @@ export async function initializeCheckoutOrderAction(
       detectedOrigin ||
       process.env.NEXT_PUBLIC_APP_URL ||
       "http://localhost:3000";
-    const callbackUrl = `${appUrl}/api/payments/paystack/verify`;
+    const callbackUrl = options?.callbackUrl || `${appUrl}/api/payments/paystack/verify`;
 
     const paystackRes = await initializePaystackTransaction({
       email: user.email!,

@@ -197,7 +197,7 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState<"categories" | "deals" | null>("categories");
   const [searchQuery, setSearchQuery] = useState("");
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Close menus on route change
   useEffect(() => {

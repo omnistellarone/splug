@@ -1,35 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedContext } from "@/lib/auth/server-auth";
 
 export const dynamic = "force-dynamic";
 
-async function getAuthUser(request: NextRequest) {
-  const supabase = await createClient();
-  const authHeader = request.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.substring(7);
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-    if (!error && user) return { supabase, user };
-  }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { supabase, user };
-}
-
 /**
  * GET /api/orders/[id]
- * Fetch single order detail with order line items
+ * Fetch single order detail with order line items and status tracking history
  */
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { supabase, user } = await getAuthUser(request);
+    const { supabase, user } = await getAuthenticatedContext(request);
 
     if (!user) {
       return NextResponse.json(
@@ -61,6 +44,13 @@ export async function GET(
           quantity,
           line_total_minor,
           image_url
+        ),
+        order_status_history (
+          id,
+          from_status,
+          to_status,
+          note,
+          created_at
         )
       `)
       .eq("id", orderId)

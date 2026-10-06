@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { initializeCheckoutOrderAction } from "@/lib/checkout/actions";
+import { getAuthenticatedContext } from "@/lib/auth/server-auth";
 import type { CreateOrderParams } from "@/lib/checkout/types";
 
 export const dynamic = "force-dynamic";
@@ -7,11 +8,20 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/checkout
  * Initializes a checkout order and returns the Paystack authorization URL
- * Body: { items, shippingAddress, couponCode?, notes? }
+ * Body: { items, shippingAddress, couponCode?, notes?, callbackUrl? }
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: CreateOrderParams = await request.json();
+    const { supabase, user } = await getAuthenticatedContext(request);
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required to checkout" },
+        { status: 401 }
+      );
+    }
+
+    const body: CreateOrderParams & { callbackUrl?: string } = await request.json();
 
     if (!body.items || body.items.length === 0) {
       return NextResponse.json(
@@ -27,7 +37,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await initializeCheckoutOrderAction(body);
+    const result = await initializeCheckoutOrderAction(body, {
+      user,
+      supabase,
+      callbackUrl: body.callbackUrl,
+    });
 
     if (!result.success) {
       return NextResponse.json(
