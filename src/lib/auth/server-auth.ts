@@ -23,9 +23,11 @@ export async function getAuthenticatedContext(
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.substring(7).trim();
     if (token) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)!;
       const mobileClient = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        supabaseUrl,
+        supabaseKey,
         {
           auth: {
             persistSession: false,

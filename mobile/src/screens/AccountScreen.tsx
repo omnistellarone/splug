@@ -51,6 +51,20 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     }
   };
 
+  const handleSignOut = async () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out of Slurge?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await signOut();
+          navigation.navigate("Auth");
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -168,7 +182,7 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
         {/* Sign Out Button */}
         {user && (
-          <TouchableOpacity style={styles.signOutBtn} onPress={signOut} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.8}>
             <LogOut size={18} color={colors.danger} />
             <Text style={styles.signOutText}>Sign Out of Slurge</Text>
           </TouchableOpacity>

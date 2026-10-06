@@ -366,35 +366,197 @@ export const api = {
 
   // Cart
   async getCart() {
-    return request<{ items: CartItem[]; totals: CartTotals }>("/api/cart");
+    const res = await request<{ items: CartItem[]; totals: CartTotals }>("/api/cart");
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) return res;
+
+      const { data, error } = await supabase
+        .from("cart_items")
+        .select(`
+          id,
+          variant_id,
+          quantity,
+          variant:product_variants (
+            id,
+            product_id,
+            sku,
+            price_minor,
+            options,
+            stock,
+            is_active,
+            product:products (
+              name,
+              images:product_images (storage_path, is_primary)
+            )
+          )
+        `)
+        .eq("user_id", userId);
+
+      if (!error && data) {
+        const items: CartItem[] = [];
+        for (const raw of data as any[]) {
+          if (!raw.variant || !raw.variant.is_active) continue;
+          const img =
+            raw.variant.product?.images?.find((i: any) => i.is_primary)?.storage_path ||
+            raw.variant.product?.images?.[0]?.storage_path;
+          items.push({
+            variantId: raw.variant.id,
+            productId: raw.variant.product_id,
+            productName: raw.variant.product?.name || "Product",
+            variantSku: raw.variant.sku,
+            variantOptions: raw.variant.options || {},
+            priceMinor: raw.variant.price_minor,
+            image: img,
+            quantity: Math.min(raw.quantity, raw.variant.stock),
+            maxStock: raw.variant.stock,
+          });
+        }
+        const subtotalMinor = items.reduce((sum, i) => sum + i.priceMinor * i.quantity, 0);
+        const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
+        return {
+          success: true,
+          data: {
+            items,
+            totals: {
+              subtotalMinor,
+              itemCount,
+              freeShippingThresholdMinor: 100000000,
+              amountNeededForFreeShippingMinor: Math.max(0, 100000000 - subtotalMinor),
+              qualifiesForFreeShipping: subtotalMinor >= 100000000,
+            },
+          },
+        };
+      }
+    } catch {
+      // Ignore
+    }
+
+    return res;
   },
 
   async updateCartItem(variantId: string, quantity: number) {
-    return request<{ items: CartItem[]; totals: CartTotals }>("/api/cart", {
+    const res = await request<{ items: CartItem[]; totals: CartTotals }>("/api/cart", {
       method: "POST",
       body: JSON.stringify({ variantId, quantity }),
     });
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        if (quantity <= 0) {
+          await supabase.from("cart_items").delete().eq("user_id", userId).eq("variant_id", variantId);
+        } else {
+          await supabase.from("cart_items").upsert(
+            {
+              user_id: userId,
+              variant_id: variantId,
+              quantity,
+            },
+            { onConflict: "user_id,variant_id" }
+          );
+        }
+        return await this.getCart();
+      }
+    } catch {
+      // Ignore
+    }
+
+    return res;
   },
 
   async removeCartItem(variantId: string) {
-    return request<{ items: CartItem[]; totals: CartTotals }>(
+    const res = await request<{ items: CartItem[]; totals: CartTotals }>(
       `/api/cart?variantId=${encodeURIComponent(variantId)}`,
       { method: "DELETE" }
     );
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        await supabase.from("cart_items").delete().eq("user_id", userId).eq("variant_id", variantId);
+        return await this.getCart();
+      }
+    } catch {
+      // Ignore
+    }
+
+    return res;
   },
 
   async clearCart() {
-    return request<{ items: CartItem[]; totals: CartTotals }>(
+    const res = await request<{ items: CartItem[]; totals: CartTotals }>(
       "/api/cart?clearAll=true",
       { method: "DELETE" }
     );
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        await supabase.from("cart_items").delete().eq("user_id", userId);
+        return {
+          success: true,
+          data: {
+            items: [],
+            totals: {
+              subtotalMinor: 0,
+              itemCount: 0,
+              freeShippingThresholdMinor: 100000000,
+              amountNeededForFreeShippingMinor: 100000000,
+              qualifiesForFreeShipping: false,
+            },
+          },
+        };
+      }
+    } catch {
+      // Ignore
+    }
+
+    return res;
   },
 
   async mergeCart(localItems: CartItem[]) {
-    return request<{ items: CartItem[]; totals: CartTotals }>("/api/cart/merge", {
+    const res = await request<{ items: CartItem[]; totals: CartTotals }>("/api/cart/merge", {
       method: "POST",
       body: JSON.stringify({ localItems }),
     });
+    if (res.success && res.data) return res;
+
+    // Direct Supabase fallback
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        for (const item of localItems) {
+          await supabase.from("cart_items").upsert(
+            {
+              user_id: userId,
+              variant_id: item.variantId,
+              quantity: item.quantity,
+            },
+            { onConflict: "user_id,variant_id" }
+          );
+        }
+        return await this.getCart();
+      }
+    } catch {
+      // Ignore
+    }
+
+    return res;
   },
 
   // Coupons

@@ -62,7 +62,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       if (!res.success) {
         setFormError(res.error || "Unable to sign in. Please verify your credentials.");
       } else {
-        navigation.goBack();
+        navigation.navigate("Main", { screen: "Home" });
       }
     } else {
       if (!fullName.trim()) {
@@ -74,7 +74,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         setFormError(res.error || "Unable to create account. Please try again.");
       } else {
         Alert.alert("Account Created", "Your account was successfully registered!", [
-          { text: "OK", onPress: () => navigation.goBack() },
+          { text: "OK", onPress: () => navigation.navigate("Main", { screen: "Home" }) },
         ]);
       }
     }
@@ -85,7 +85,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     if (res.success) {
       if (savedEmail) setIdentifier(savedEmail);
       Alert.alert("Biometrics Recognized", `Session restored for ${savedEmail || "customer"}`);
-      navigation.goBack();
+      navigation.navigate("Main", { screen: "Home" });
     } else {
       Alert.alert("Biometric Unlock", res.error || "No saved session to restore");
     }
@@ -95,11 +95,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setFormError(null);
     const res = await signInWithGoogle();
     if (res.success) {
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else {
-        navigation.navigate("Main", { screen: "Home" });
-      }
+      navigation.navigate("Main", { screen: "Home" });
     } else if (res.error && res.error !== "Google sign-in was cancelled") {
       setFormError(res.error);
     }

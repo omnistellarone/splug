@@ -51,60 +51,90 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     qualifiesForFreeShipping,
   };
 
-  // 1. Initial cart load / guest load
+  const getUserCartStorageKey = (userId: string) => `slurge_user_cart_${userId}`;
+
+  // Persist cart to local SecureStore (user-scoped if signed in, guest-scoped if not)
+  const persistCart = async (newItems: CartItem[]) => {
+    try {
+      if (user?.id) {
+        await SecureStore.setItemAsync(getUserCartStorageKey(user.id), JSON.stringify(newItems));
+      } else {
+        await SecureStore.setItemAsync(GUEST_CART_STORAGE_KEY, JSON.stringify(newItems));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  // 1. Initial cart load and synchronization
   useEffect(() => {
+    let isCancelled = false;
+
     (async () => {
-      if (user) {
+      if (user?.id) {
         setIsLoading(true);
-        // Load existing guest items to merge
         try {
-          const savedGuestJson = await SecureStore.getItemAsync(GUEST_CART_STORAGE_KEY);
-          const guestItems: CartItem[] = savedGuestJson ? JSON.parse(savedGuestJson) : [];
+          const userCacheKey = getUserCartStorageKey(user.id);
+
+          // Step A: Immediately restore user-scoped local cache for instant UI
+          const cachedJson = await SecureStore.getItemAsync(userCacheKey);
+          let currentItems: CartItem[] = cachedJson ? JSON.parse(cachedJson) : [];
+
+          if (currentItems.length > 0 && !isCancelled) {
+            setItems(currentItems);
+          }
+
+          // Step B: Check for guest cart items added before signing in and merge
+          const guestJson = await SecureStore.getItemAsync(GUEST_CART_STORAGE_KEY);
+          const guestItems: CartItem[] = guestJson ? JSON.parse(guestJson) : [];
 
           if (guestItems.length > 0) {
             const mergeRes = await api.mergeCart(guestItems);
             if (mergeRes.success && mergeRes.data?.items) {
-              setItems(mergeRes.data.items);
+              currentItems = mergeRes.data.items;
+              if (!isCancelled) setItems(currentItems);
+              await SecureStore.setItemAsync(userCacheKey, JSON.stringify(currentItems));
               await SecureStore.deleteItemAsync(GUEST_CART_STORAGE_KEY);
               setIsLoading(false);
               return;
             }
           }
 
-          // Fetch user cart
+          // Step C: Fetch canonical cart from server or Supabase
           const res = await api.getCart();
           if (res.success && res.data?.items) {
-            setItems(res.data.items);
+            if (res.data.items.length > 0) {
+              if (!isCancelled) setItems(res.data.items);
+              await SecureStore.setItemAsync(userCacheKey, JSON.stringify(res.data.items));
+            } else if (currentItems.length > 0) {
+              // Re-sync local cached items up to server
+              await api.mergeCart(currentItems);
+            }
           }
         } catch (err) {
-          console.warn("Cart fetch error:", err);
+          console.warn("Cart synchronization error:", err);
         } finally {
-          setIsLoading(false);
+          if (!isCancelled) setIsLoading(false);
         }
       } else {
-        // Load guest cart
+        // User signed out: restore guest cart
         try {
-          const savedGuestJson = await SecureStore.getItemAsync(GUEST_CART_STORAGE_KEY);
-          if (savedGuestJson) {
-            setItems(JSON.parse(savedGuestJson));
+          const guestJson = await SecureStore.getItemAsync(GUEST_CART_STORAGE_KEY);
+          if (guestJson) {
+            if (!isCancelled) setItems(JSON.parse(guestJson));
+          } else {
+            if (!isCancelled) setItems([]);
           }
         } catch {
-          // Ignore
+          if (!isCancelled) setItems([]);
         }
       }
     })();
-  }, [user]);
 
-  // Persist guest cart locally when unauthenticated
-  const persistGuestCart = async (newItems: CartItem[]) => {
-    if (!user) {
-      try {
-        await SecureStore.setItemAsync(GUEST_CART_STORAGE_KEY, JSON.stringify(newItems));
-      } catch {
-        // Ignore
-      }
-    }
-  };
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.id]);
 
   const addToCart = async (item: Omit<CartItem, "quantity">, quantity: number = 1) => {
     const existingIndex = items.findIndex((i) => i.variantId === item.variantId);
@@ -121,7 +151,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setItems(updated);
-    await persistGuestCart(updated);
+    await persistCart(updated);
 
     if (user) {
       const targetQty = updated.find((i) => i.variantId === item.variantId)?.quantity || quantity;
@@ -143,7 +173,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setItems(updated);
-    await persistGuestCart(updated);
+    await persistCart(updated);
 
     if (user) {
       await api.updateCartItem(variantId, quantity);
@@ -153,7 +183,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const removeFromCart = async (variantId: string) => {
     const updated = items.filter((i) => i.variantId !== variantId);
     setItems(updated);
-    await persistGuestCart(updated);
+    await persistCart(updated);
 
     if (user) {
       await api.removeCartItem(variantId);
@@ -165,7 +195,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCouponCode("");
     setCouponDiscountMinor(0);
     setCouponError(null);
-    await persistGuestCart([]);
+
+    try {
+      if (user?.id) {
+        await SecureStore.deleteItemAsync(getUserCartStorageKey(user.id));
+      }
+      await SecureStore.deleteItemAsync(GUEST_CART_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
 
     if (user) {
       await api.clearCart();
