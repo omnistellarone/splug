@@ -8,6 +8,7 @@ interface CartStoreState {
   items: CartItem[];
   isOpen: boolean;
   hasHydrated: boolean;
+  isAuthenticated: boolean;
   freeShippingThresholdMinor: number;
 
   openCart: () => void;
@@ -21,6 +22,7 @@ interface CartStoreState {
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
   setItems: (items: CartItem[]) => void;
+  setIsAuthenticated: (val: boolean) => void;
   setHasHydrated: (state: boolean) => void;
   setFreeShippingThresholdMinor: (minor: number) => void;
 }
@@ -31,6 +33,7 @@ export const useCartStore = create<CartStoreState>()(
       items: [],
       isOpen: false,
       hasHydrated: false,
+      isAuthenticated: false,
       freeShippingThresholdMinor: 10000000, // ₦100,000 default (admin configurable)
 
       openCart: () => set({ isOpen: true }),
@@ -101,6 +104,7 @@ export const useCartStore = create<CartStoreState>()(
         set({ items: [] });
       },
       setItems: (items) => set({ items }),
+      setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
       setHasHydrated: (state) => set({ hasHydrated: state }),
       setFreeShippingThresholdMinor: (minor) =>
         set({ freeShippingThresholdMinor: Math.max(0, minor) }),
@@ -108,6 +112,19 @@ export const useCartStore = create<CartStoreState>()(
     {
       name: "slurge_guest_cart",
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => {
+        // AGENTS.md §12: Guest cart persists in localStorage. Authenticated cart is canonical in Supabase.
+        if (state.isAuthenticated) {
+          return {
+            items: [],
+            freeShippingThresholdMinor: state.freeShippingThresholdMinor,
+          };
+        }
+        return {
+          items: state.items,
+          freeShippingThresholdMinor: state.freeShippingThresholdMinor,
+        };
+      },
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },

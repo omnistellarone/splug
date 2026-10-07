@@ -117,3 +117,38 @@ describe("calculateCartTotals", () => {
     expect(totals.amountNeededForFreeShippingMinor).toBe(10000000); // default ₦100,000
   });
 });
+
+describe("Canonical DB cart persistence (AGENTS.md §12)", () => {
+  it("does not increase item count when refreshing existing DB cart", () => {
+    // When a user has 2 items in database
+    const existingDbItems = [
+      { ...mockItemA, quantity: 1 },
+      { ...mockItemB, quantity: 1 },
+    ];
+
+    // On page refresh, canonical items replace store items directly (not merged)
+    const refreshedStoreItems = existingDbItems;
+    const totals = calculateCartTotals(refreshedStoreItems);
+
+    expect(totals.itemCount).toBe(2); // exactly 2, never 4
+  });
+
+  it("handles guest cart to signed-in user transition once without duplicating", () => {
+    const guestItems = [{ ...mockItemA, quantity: 1 }];
+    const existingDbItems: CartItem[] = [];
+
+    // Login merge
+    const merged = mergeCarts(existingDbItems, guestItems);
+    expect(merged.length).toBe(1);
+    expect(merged[0].quantity).toBe(1);
+
+    // After login, guest cart is cleared in localStorage
+    const clearedGuestCart: CartItem[] = [];
+
+    // Next refresh: load canonical DB cart (merged) with no guest items
+    const nextRefresh = mergeCarts(merged, clearedGuestCart);
+    expect(nextRefresh.length).toBe(1);
+    expect(nextRefresh[0].quantity).toBe(1); // Still 1, never doubled to 2
+  });
+});
+

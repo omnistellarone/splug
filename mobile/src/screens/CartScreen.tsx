@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   Image,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   TextInput,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { colors, radius, spacing } from "@/theme/tokens";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -37,12 +40,20 @@ export const CartScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     couponCode,
     couponDiscountMinor,
     couponError,
+    isLoading,
     updateQuantity,
     removeFromCart,
     clearCart,
     applyCoupon,
     removeCoupon,
+    refreshCart,
   } = useCart();
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshCart();
+    }, [refreshCart])
+  );
 
   const [inputCoupon, setInputCoupon] = useState<string>("");
   const [applyingCoupon, setApplyingCoupon] = useState<boolean>(false);
@@ -196,22 +207,34 @@ export const CartScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <View style={styles.topBar}>
           <Text style={styles.topBarTitle}>Shopping Cart</Text>
         </View>
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconCircle}>
-            <ShoppingBag size={48} color={colors.textPlaceholder} />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refreshCart}
+              tintColor={colors.brand}
+              colors={[colors.brand]}
+            />
+          }
+        >
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconCircle}>
+              <ShoppingBag size={48} color={colors.textPlaceholder} />
+            </View>
+            <Text style={styles.emptyTitle}>Your cart is empty</Text>
+            <Text style={styles.emptySubtitle}>
+              Looks like you haven't added any electronics to your cart yet.
+            </Text>
+            <TouchableOpacity
+              style={styles.exploreBtn}
+              onPress={() => navigation.navigate("Home")}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.exploreBtnText}>Start Shopping</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySubtitle}>
-            Looks like you haven't added any electronics to your cart yet.
-          </Text>
-          <TouchableOpacity
-            style={styles.exploreBtn}
-            onPress={() => navigation.navigate("Home")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.exploreBtnText}>Start Shopping</Text>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -240,6 +263,14 @@ export const CartScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         data={items}
         keyExtractor={(item) => item.variantId}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refreshCart}
+            tintColor={colors.brand}
+            colors={[colors.brand]}
+          />
+        }
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         renderItem={({ item }) => (

@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { AppState } from "react-native";
 import { api, CartItem, CartTotals } from "@/lib/api";
 import { useAuth } from "./AuthContext";
+import { supabase } from "@/lib/supabase";
 import * as SecureStore from "expo-secure-store";
 
 const GUEST_CART_STORAGE_KEY = "slurge_guest_cart_v1";
-const FREE_SHIPPING_THRESHOLD_MINOR = 100000000; // ₦1,000,000
+const FREE_SHIPPING_THRESHOLD_MINOR = 10000000; // ₦100,000 (10,000,000 kobo)
 const STANDARD_SHIPPING_MINOR = 350000; // ₦3,500
 
 interface CartContextType {
@@ -66,9 +68,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshCart = useCallback(async () => {
+    if (user?.id) {
+      try {
+        const res = await api.getCart();
+        if (res.success && Array.isArray(res.data?.items)) {
+          setItems(res.data.items);
+          const userCacheKey = getUserCartStorageKey(user.id);
+          await SecureStore.setItemAsync(userCacheKey, JSON.stringify(res.data.items));
+        }
+      } catch (err) {
+        console.warn("Cart refresh failed:", err);
+      }
+    }
+  }, [user?.id]);
+
   // 1. Initial cart load and synchronization
   useEffect(() => {
     let isCancelled = false;
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
 
     (async () => {
       if (user?.id) {
@@ -102,20 +120,32 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           // Step C: Fetch canonical cart from server or Supabase
           const res = await api.getCart();
-          if (res.success && res.data?.items) {
-            if (res.data.items.length > 0) {
-              if (!isCancelled) setItems(res.data.items);
-              await SecureStore.setItemAsync(userCacheKey, JSON.stringify(res.data.items));
-            } else if (currentItems.length > 0) {
-              // Re-sync local cached items up to server
-              await api.mergeCart(currentItems);
-            }
+          if (res.success && Array.isArray(res.data?.items)) {
+            if (!isCancelled) setItems(res.data.items);
+            await SecureStore.setItemAsync(userCacheKey, JSON.stringify(res.data.items));
           }
         } catch (err) {
           console.warn("Cart synchronization error:", err);
         } finally {
           if (!isCancelled) setIsLoading(false);
         }
+
+        // Setup Realtime listener for this user
+        realtimeChannel = supabase
+          .channel(`mobile-cart-sync-${user.id}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "cart_items",
+              filter: `user_id=eq.${user.id}`,
+            },
+            () => {
+              refreshCart();
+            }
+          )
+          .subscribe();
       } else {
         // User signed out: restore guest cart
         try {
@@ -131,10 +161,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     })();
 
+    // App state listener: refresh cart whenever user returns to the app
+    const appStateSub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" && user?.id) {
+        refreshCart();
+      }
+    });
+
     return () => {
       isCancelled = true;
+      appStateSub.remove();
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
     };
-  }, [user?.id]);
+  }, [user?.id, refreshCart]);
 
   const addToCart = async (item: Omit<CartItem, "quantity">, quantity: number = 1) => {
     const existingIndex = items.findIndex((i) => i.variantId === item.variantId);
@@ -237,19 +278,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCouponError(null);
   };
 
-  const refreshCart = async () => {
-    if (user) {
-      setIsLoading(true);
-      try {
-        const res = await api.getCart();
-        if (res.success && res.data?.items) {
-          setItems(res.data.items);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
 
   return (
     <CartContext.Provider

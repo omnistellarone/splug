@@ -425,9 +425,9 @@ export const api = {
             totals: {
               subtotalMinor,
               itemCount,
-              freeShippingThresholdMinor: 100000000,
-              amountNeededForFreeShippingMinor: Math.max(0, 100000000 - subtotalMinor),
-              qualifiesForFreeShipping: subtotalMinor >= 100000000,
+              freeShippingThresholdMinor: 10000000,
+              amountNeededForFreeShippingMinor: Math.max(0, 10000000 - subtotalMinor),
+              qualifiesForFreeShipping: subtotalMinor >= 10000000,
             },
           },
         };
@@ -440,13 +440,6 @@ export const api = {
   },
 
   async updateCartItem(variantId: string, quantity: number) {
-    const res = await request<{ items: CartItem[]; totals: CartTotals }>("/api/cart", {
-      method: "POST",
-      body: JSON.stringify({ variantId, quantity }),
-    });
-    if (res.success && res.data) return res;
-
-    // Direct Supabase fallback
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
@@ -463,100 +456,101 @@ export const api = {
             { onConflict: "user_id,variant_id" }
           );
         }
-        return await this.getCart();
       }
-    } catch {
-      // Ignore
+    } catch (err) {
+      console.warn("Direct Supabase updateCartItem error:", err);
     }
 
-    return res;
+    const res = await request<{ items: CartItem[]; totals: CartTotals }>("/api/cart", {
+      method: "POST",
+      body: JSON.stringify({ variantId, quantity }),
+    });
+    if (res.success && res.data) return res;
+
+    return await this.getCart();
   },
 
   async removeCartItem(variantId: string) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (userId) {
+        await supabase.from("cart_items").delete().eq("user_id", userId).eq("variant_id", variantId);
+      }
+    } catch (err) {
+      console.warn("Direct Supabase removeCartItem error:", err);
+    }
+
     const res = await request<{ items: CartItem[]; totals: CartTotals }>(
       `/api/cart?variantId=${encodeURIComponent(variantId)}`,
       { method: "DELETE" }
     );
     if (res.success && res.data) return res;
 
-    // Direct Supabase fallback
+    return await this.getCart();
+  },
+
+  async clearCart() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
       if (userId) {
-        await supabase.from("cart_items").delete().eq("user_id", userId).eq("variant_id", variantId);
-        return await this.getCart();
+        await supabase.from("cart_items").delete().eq("user_id", userId);
       }
-    } catch {
-      // Ignore
+    } catch (err) {
+      console.warn("Direct Supabase clearCart error:", err);
     }
 
-    return res;
-  },
-
-  async clearCart() {
     const res = await request<{ items: CartItem[]; totals: CartTotals }>(
       "/api/cart?clearAll=true",
       { method: "DELETE" }
     );
     if (res.success && res.data) return res;
 
-    // Direct Supabase fallback
+    return {
+      success: true,
+      data: {
+        items: [],
+        totals: {
+          subtotalMinor: 0,
+          itemCount: 0,
+          freeShippingThresholdMinor: 10000000,
+          amountNeededForFreeShippingMinor: 10000000,
+          qualifiesForFreeShipping: false,
+        },
+      },
+    };
+  },
+
+  async mergeCart(localItems: CartItem[]) {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
       if (userId) {
-        await supabase.from("cart_items").delete().eq("user_id", userId);
-        return {
-          success: true,
-          data: {
-            items: [],
-            totals: {
-              subtotalMinor: 0,
-              itemCount: 0,
-              freeShippingThresholdMinor: 100000000,
-              amountNeededForFreeShippingMinor: 100000000,
-              qualifiesForFreeShipping: false,
-            },
-          },
-        };
+        for (const item of localItems) {
+          if (item.quantity > 0) {
+            await supabase.from("cart_items").upsert(
+              {
+                user_id: userId,
+                variant_id: item.variantId,
+                quantity: item.quantity,
+              },
+              { onConflict: "user_id,variant_id" }
+            );
+          }
+        }
       }
-    } catch {
-      // Ignore
+    } catch (err) {
+      console.warn("Direct Supabase mergeCart error:", err);
     }
 
-    return res;
-  },
-
-  async mergeCart(localItems: CartItem[]) {
     const res = await request<{ items: CartItem[]; totals: CartTotals }>("/api/cart/merge", {
       method: "POST",
       body: JSON.stringify({ localItems }),
     });
     if (res.success && res.data) return res;
 
-    // Direct Supabase fallback
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-      if (userId) {
-        for (const item of localItems) {
-          await supabase.from("cart_items").upsert(
-            {
-              user_id: userId,
-              variant_id: item.variantId,
-              quantity: item.quantity,
-            },
-            { onConflict: "user_id,variant_id" }
-          );
-        }
-        return await this.getCart();
-      }
-    } catch {
-      // Ignore
-    }
-
-    return res;
+    return await this.getCart();
   },
 
   // Coupons
