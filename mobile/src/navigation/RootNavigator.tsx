@@ -88,15 +88,21 @@ function MainTabs() {
         tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          borderTopColor: "rgba(226, 232, 240, 0.8)",
+          borderTopWidth: 1,
+          height: 64,
+          paddingBottom: 10,
           paddingTop: 8,
+          shadowColor: "#0f172a",
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "600",
+          fontWeight: "700",
         },
       }}
     >

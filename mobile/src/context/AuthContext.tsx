@@ -170,6 +170,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: error.message };
       }
 
+      // Fire Mailgun welcome & activation email asynchronously
+      try {
+        const { getApiBaseUrl } = require("@/lib/api");
+        const apiUrl = getApiBaseUrl();
+        fetch(`${apiUrl}/api/auth/welcome`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: cleanEmail,
+            fullName: fullName.trim(),
+            userId: data.user?.id,
+          }),
+        }).catch((e) => {
+          console.warn("[Mobile Auth] Welcome email trigger non-fatal error:", e);
+        });
+      } catch (e) {
+        // Non-blocking
+      }
+
       if (rememberDevice && cleanEmail) {
         setSavedEmail(cleanEmail);
         await SecureStore.setItemAsync(SAVED_EMAIL_KEY, cleanEmail);

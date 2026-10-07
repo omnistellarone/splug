@@ -26,6 +26,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [catalogY, setCatalogY] = useState<number>(340);
+  const flatListRef = React.useRef<FlatList>(null);
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -63,6 +65,11 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     loadData();
   };
 
+  const handleExploreCollection = () => {
+    setSelectedCategory("all");
+    flatListRef.current?.scrollToOffset({ offset: Math.max(0, catalogY - 12), animated: true });
+  };
+
   const renderHeader = () => (
     <View>
       {/* Search Bar */}
@@ -85,7 +92,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Promotional Hero Banner (Stitch Screen 2) */}
+      {/* Promotional Hero Banner with Liquid Glass Effect */}
       <View style={styles.heroBanner}>
         <View style={styles.heroBadge}>
           <Sparkles size={12} color="#F59E0B" />
@@ -97,7 +104,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </Text>
         <TouchableOpacity
           style={styles.heroCta}
-          onPress={() => setSelectedCategory("all")}
+          onPress={handleExploreCollection}
           activeOpacity={0.8}
         >
           <Text style={styles.heroCtaText}>Explore Collection</Text>
@@ -152,8 +159,13 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </ScrollView>
       </View>
 
-      {/* Catalog Section Header */}
-      <View style={styles.sectionHeader}>
+      {/* Catalog Section Header with Layout Tracker */}
+      <View
+        style={styles.sectionHeader}
+        onLayout={(e) => {
+          setCatalogY(e.nativeEvent.layout.y);
+        }}
+      >
         <Text style={styles.sectionTitle}>
           {selectedCategory === "all" ? "Featured Electronics" : `${selectedCategory.toUpperCase()}`}
         </Text>
@@ -185,6 +197,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <Header onPressCart={() => navigation.navigate("Main", { screen: "Cart" })} />
 
       <FlatList
+        ref={flatListRef}
         data={products}
         keyExtractor={(item) => item.id}
         numColumns={2}
@@ -241,13 +254,18 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    borderColor: "rgba(226, 232, 240, 0.9)",
     paddingHorizontal: spacing.md,
-    height: 44,
+    height: 46,
     gap: 8,
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
@@ -255,70 +273,102 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   heroBanner: {
-    backgroundColor: colors.brandDark,
-    borderRadius: radius.lg,
-    padding: spacing.base,
+    backgroundColor: "#18182E",
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     marginVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    shadowColor: "#18182E",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 4,
   },
   heroBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.18)",
     alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: radius.pill,
     marginBottom: spacing.sm,
   },
   heroBadgeText: {
     color: "#FCD34D",
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: "800",
     letterSpacing: 0.5,
   },
   heroTitle: {
     fontSize: 22,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.onPrimary,
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   heroSubtitle: {
     fontSize: 12,
-    color: "#D1D5DB",
+    color: "#CBD5E1",
     lineHeight: 18,
     marginBottom: spacing.md,
   },
   heroCta: {
-    backgroundColor: colors.brand,
-    paddingHorizontal: spacing.base,
-    paddingVertical: 8,
-    borderRadius: radius.md,
+    backgroundColor: "#4F46E5",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
     alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.35)",
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 3,
   },
   heroCtaText: {
     color: colors.onPrimary,
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "800",
+    letterSpacing: 0.2,
   },
   categoriesSection: {
     marginBottom: spacing.md,
   },
   categoryScroll: {
     gap: 8,
+    paddingVertical: 2,
   },
   categoryPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: "rgba(226, 232, 240, 0.9)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   categoryPillActive: {
-    backgroundColor: colors.brand,
+    backgroundColor: "#4F46E5",
+    borderColor: "#6366F1",
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 3,
   },
   categoryPillText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textSecondary,
   },
   categoryPillTextActive: {

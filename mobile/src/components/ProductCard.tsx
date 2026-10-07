@@ -56,7 +56,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
           <Image
             source={{ uri: imageUri }}
             style={styles.image}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         ) : (
           <View style={styles.placeholderImage}>
@@ -74,7 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
               <Text style={styles.stockBadgeText}>In Stock</Text>
             </View>
           ) : (
-            <View style={[styles.stockBadge, { backgroundColor: colors.dangerLight }]}>
+            <View style={[styles.stockBadge, styles.stockBadgeOutOfStock]}>
               <Text style={[styles.stockBadgeText, { color: colors.danger }]}>Out of Stock</Text>
             </View>
           )}
@@ -108,26 +108,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: "#FFFFFF",
+    borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "rgba(226, 232, 240, 0.85)",
     overflow: "hidden",
     marginBottom: spacing.md,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
   imageContainer: {
     width: "100%",
-    height: 150,
+    height: 160,
     backgroundColor: colors.surfaceContainerLow,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    padding: spacing.sm,
+    padding: 0,
+    overflow: "hidden",
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
   },
   image: {
     width: "100%",
@@ -146,20 +149,28 @@ const styles = StyleSheet.create({
   },
   tagRow: {
     position: "absolute",
-    top: spacing.sm,
-    left: spacing.sm,
-    right: spacing.sm,
+    top: 8,
+    left: 8,
+    right: 8,
     flexDirection: "row",
     justifyContent: "space-between",
+    zIndex: 2,
   },
   ratingBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: radius.pill,
     gap: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   ratingText: {
     fontSize: 10,
@@ -167,18 +178,29 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   stockBadge: {
-    backgroundColor: colors.successLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: radius.pill,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  stockBadgeOutOfStock: {
+    backgroundColor: "rgba(254, 242, 242, 0.95)",
+    borderColor: "rgba(254, 202, 202, 0.8)",
   },
   stockBadgeText: {
     fontSize: 9,
-    fontWeight: "700",
-    color: colors.success,
+    fontWeight: "800",
+    color: "#16A34A",
   },
   details: {
-    padding: 10,
+    padding: 12,
     flex: 1,
     justifyContent: "space-between",
   },
@@ -203,15 +225,21 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   addBtn: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: radius.md,
     backgroundColor: colors.brand,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    shadowColor: colors.brand,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   addBtnDisabled: {
     backgroundColor: colors.outlineVariant,
+    shadowOpacity: 0,
   },
 });

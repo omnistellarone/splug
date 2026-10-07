@@ -117,4 +117,25 @@ describe("Phase 6: Mailgun Email Service & Templates", () => {
       expect(html).toContain("Your order has been cancelled");
     });
   });
+
+  describe("Welcome & Activation Email Template", () => {
+    it("renders welcome email with user name and activation URL", async () => {
+      const { renderWelcomeActivationEmail } = await import(
+        "./templates/welcome-activation"
+      );
+
+      const { html, text, subject } = renderWelcomeActivationEmail({
+        email: "chioma@example.com",
+        fullName: "Chioma Okonjo",
+        activationUrl: "https://slurge.ng/auth/activate?token=test1234",
+      });
+
+      expect(subject).toContain("Welcome to Slurge Electronics");
+      expect(html).toContain("Chioma Okonjo");
+      expect(html).toContain("https://slurge.ng/auth/activate?token=test1234");
+      expect(html).toContain("100% Genuine Devices");
+      expect(text).toContain("Chioma Okonjo");
+      expect(text).toContain("https://slurge.ng/auth/activate?token=test1234");
+    });
+  });
 });

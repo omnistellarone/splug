@@ -3,10 +3,12 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { renderOrderConfirmationEmail } from "./templates/order-confirmation";
 import { renderOrderStatusEmail } from "./templates/order-status";
+import { renderWelcomeActivationEmail } from "./templates/welcome-activation";
 import type {
   SendEmailOptions,
   SendEmailResult,
   OrderEmailData,
+  WelcomeEmailData,
 } from "./types";
 
 function getMailgunConfig() {
@@ -227,3 +229,23 @@ export async function sendOrderStatusChanged(
     orderId: order.orderId,
   });
 }
+
+/**
+ * Sends welcome & account activation email upon user registration — Mailgun integration
+ */
+export async function sendWelcomeActivation(
+  data: WelcomeEmailData
+): Promise<SendEmailResult> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://slurge.ng";
+  const { html, text, subject } = renderWelcomeActivationEmail(data, appUrl);
+
+  return sendEmail({
+    to: data.email,
+    subject,
+    html,
+    text,
+    templateKey: "welcome-activation",
+    userId: data.userId,
+  });
+}
+

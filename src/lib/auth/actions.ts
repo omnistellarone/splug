@@ -9,6 +9,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
 } from "./validation";
+import { sendWelcomeActivation } from "@/lib/email/service";
 
 export interface AuthActionResult {
   success: boolean;
@@ -119,6 +120,19 @@ export async function signUpAction(
   }
 
   revalidatePath("/", "layout");
+
+  // Send Mailgun welcome & activation email
+  if (data.user) {
+    try {
+      await sendWelcomeActivation({
+        email: parsed.data.email,
+        fullName: parsed.data.fullName,
+        userId: data.user.id,
+      });
+    } catch (err) {
+      console.warn("[SignUpAction] Welcome email sending error:", err);
+    }
+  }
 
   // If email confirmation is required by Supabase project settings
   if (data.user && !data.session) {

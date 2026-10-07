@@ -19,9 +19,17 @@ export interface SendEmailOptions {
     | "order-delivered"
     | "order-cancelled"
     | "order-refunded"
+    | "welcome-activation"
     | "general";
   orderId?: string;
   userId?: string;
+}
+
+export interface WelcomeEmailData {
+  email: string;
+  fullName?: string;
+  userId?: string;
+  activationUrl?: string;
 }
 
 export interface SendEmailResult {
