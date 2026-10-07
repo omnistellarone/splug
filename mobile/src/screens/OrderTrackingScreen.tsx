@@ -200,7 +200,9 @@ export const OrderTrackingScreen: React.FC<Props> = ({ route, navigation }) => {
               <Text style={styles.mapTitle}>Live Route Navigation</Text>
             </View>
             <View style={styles.mapLocationBadge}>
-              <Text style={styles.mapLocationText}>Admiralty Way, Lekki</Text>
+              <Text style={styles.mapLocationText}>
+                {order?.shipping_city ? `${order.shipping_city} Dispatch Route` : "Express Dispatch Route"}
+              </Text>
             </View>
           </View>
 

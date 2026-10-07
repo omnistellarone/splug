@@ -245,9 +245,9 @@ export const PaymentStatusScreen: React.FC<Props> = ({ route, navigation }) => {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.channelLabel}>Payment Channel</Text>
-                  <Text style={styles.channelName}>Paystack Mastercard / Tokenized</Text>
+                  <Text style={styles.channelName}>Paystack Secure Checkout</Text>
                 </View>
-                <Text style={styles.cardMask}>•••• 8821</Text>
+                <Text style={styles.cardMask}>Verified</Text>
               </View>
 
               <View style={styles.divider} />
@@ -281,9 +281,8 @@ export const PaymentStatusScreen: React.FC<Props> = ({ route, navigation }) => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.detailLabel}>Delivery Address</Text>
                   <Text style={styles.addressText}>
-                    {order?.shipping_address1 || order?.shipping_address_line1 || "14 Admiralty Way, Lekki Phase 1, Lagos"}
-                    {", "}
-                    {order?.shipping_city || "Lagos"}
+                    {order?.shipping_address1 || order?.shipping_address_line1 || "Customer Delivery Destination"}
+                    {order?.shipping_city ? `, ${order.shipping_city}` : ""}
                   </Text>
                 </View>
               </View>

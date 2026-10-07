@@ -58,7 +58,7 @@ export default function AddressesPage() {
   const [addressLine1, setAddressLine1] = React.useState("");
   const [addressLine2, setAddressLine2] = React.useState("");
   const [city, setCity] = React.useState("");
-  const [state, setState] = React.useState("Lagos");
+  const [state, setState] = React.useState("");
   const [isDefault, setIsDefault] = React.useState(false);
   const [formError, setFormError] = React.useState<string | null>(null);
 
@@ -84,8 +84,8 @@ export default function AddressesPage() {
     e.preventDefault();
     setFormError(null);
 
-    if (!fullName.trim() || !phone.trim() || !addressLine1.trim() || !city.trim()) {
-      setFormError("Please fill in all required fields.");
+    if (!fullName.trim() || !phone.trim() || !addressLine1.trim() || !city.trim() || !state.trim()) {
+      setFormError("Please fill in all required fields (including state).");
       return;
     }
 
@@ -258,6 +258,7 @@ export default function AddressesPage() {
                 onChange={(e) => setState(e.target.value)}
                 className="w-full h-9 px-3 text-xs rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--primary)]"
               >
+                <option value="">Select Delivery State *</option>
                 {NIGERIAN_STATES.map((s) => (
                   <option key={s} value={s}>
                     {s}

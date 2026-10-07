@@ -44,7 +44,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const [newPhone, setNewPhone] = useState<string>("");
   const [newLine1, setNewLine1] = useState<string>("");
   const [newCity, setNewCity] = useState<string>("");
-  const [newState, setNewState] = useState<string>("Lagos State");
+  const [newState, setNewState] = useState<string>("");
   const [newIsDefault, setNewIsDefault] = useState<boolean>(true);
   const [isSavingAddress, setIsSavingAddress] = useState<boolean>(false);
 
@@ -84,8 +84,8 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   };
 
   const handleSaveNewAddress = async () => {
-    if (!newFullName.trim() || !newPhone.trim() || !newLine1.trim() || !newCity.trim()) {
-      Alert.alert("Missing Fields", "Please complete all address fields to proceed.");
+    if (!newFullName.trim() || !newPhone.trim() || !newLine1.trim() || !newCity.trim() || !newState.trim()) {
+      Alert.alert("Missing Fields", "Please complete all address fields (including state) to proceed.");
       return;
     }
 
@@ -537,7 +537,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     style={styles.fieldInput}
                     value={newLine1}
                     onChangeText={setNewLine1}
-                    placeholder="e.g. Plot 14 Admiralty Way, Lekki"
+                    placeholder="House number, street name"
                   />
                 </View>
 
@@ -548,7 +548,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                       style={styles.fieldInput}
                       value={newCity}
                       onChangeText={setNewCity}
-                      placeholder="e.g. Lekki"
+                      placeholder="City or town"
                     />
                   </View>
                   <View style={[styles.field, { flex: 1 }]}>
@@ -557,7 +557,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                       style={styles.fieldInput}
                       value={newState}
                       onChangeText={setNewState}
-                      placeholder="e.g. Lagos State"
+                      placeholder="State (e.g. Lagos, Abuja)"
                     />
                   </View>
                 </View>

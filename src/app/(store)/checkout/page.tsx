@@ -73,7 +73,7 @@ export default function CheckoutPage() {
   const [addressLine1, setAddressLine1] = React.useState("");
   const [addressLine2, setAddressLine2] = React.useState("");
   const [city, setCity] = React.useState("");
-  const [state, setState] = React.useState("Lagos");
+  const [state, setState] = React.useState("");
   const [customerNote, setCustomerNote] = React.useState("");
 
   // Coupon state
@@ -113,6 +113,10 @@ export default function CheckoutPage() {
           setSelectedAddressId(defaultAddr.id);
         } else {
           setShowNewAddressForm(true);
+          const metaName = (authUser.user_metadata?.full_name as string) || (authUser.user_metadata?.name as string) || "";
+          if (metaName) {
+            setFullName(metaName);
+          }
         }
       } else {
         setUser(null);
@@ -145,8 +149,8 @@ export default function CheckoutPage() {
     let shippingAddress: ShippingAddressSnapshot;
 
     if (showNewAddressForm || savedAddresses.length === 0) {
-      if (!fullName.trim() || !phone.trim() || !addressLine1.trim() || !city.trim()) {
-        setCheckoutError("Please fill in all required shipping address fields.");
+      if (!fullName.trim() || !phone.trim() || !addressLine1.trim() || !city.trim() || !state.trim()) {
+        setCheckoutError("Please fill in all required shipping address fields (including delivery state).");
         return;
       }
 
@@ -390,7 +394,8 @@ export default function CheckoutPage() {
                       id="fullName"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Babatunde Adeleke"
+                      placeholder="Recipient full name"
+                      autoComplete="off"
                       className="h-10 text-xs"
                     />
                   </div>
@@ -402,7 +407,8 @@ export default function CheckoutPage() {
                       id="phone"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. 08012345678"
+                      placeholder="08012345678"
+                      autoComplete="off"
                       className="h-10 text-xs"
                     />
                   </div>
@@ -416,7 +422,8 @@ export default function CheckoutPage() {
                     id="addressLine1"
                     value={addressLine1}
                     onChange={(e) => setAddressLine1(e.target.value)}
-                    placeholder="e.g. 14 Admiralty Way, Lekki Phase 1"
+                    placeholder="House / building number, street name"
+                    autoComplete="off"
                     className="h-10 text-xs"
                   />
                 </div>
@@ -429,7 +436,8 @@ export default function CheckoutPage() {
                     id="addressLine2"
                     value={addressLine2}
                     onChange={(e) => setAddressLine2(e.target.value)}
-                    placeholder="e.g. Flat 3B, Beside Total Filling Station"
+                    placeholder="Apartment, suite, landmark (optional)"
+                    autoComplete="off"
                     className="h-10 text-xs"
                   />
                 </div>
@@ -443,7 +451,8 @@ export default function CheckoutPage() {
                       id="city"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="e.g. Lekki / Ikeja / Garki"
+                      placeholder="City or local area"
+                      autoComplete="off"
                       className="h-10 text-xs"
                     />
                   </div>
@@ -457,6 +466,7 @@ export default function CheckoutPage() {
                       onChange={(e) => setState(e.target.value)}
                       className="w-full h-10 px-3 text-xs rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--primary)]"
                     >
+                      <option value="">Select Delivery State *</option>
                       {NIGERIAN_STATES.map((s) => (
                         <option key={s} value={s}>
                           {s}
