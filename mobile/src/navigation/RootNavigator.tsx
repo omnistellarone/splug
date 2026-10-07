@@ -12,11 +12,12 @@ import { OrderTrackingScreen } from "@/screens/OrderTrackingScreen";
 import { AccountScreen } from "@/screens/AccountScreen";
 import { AuthScreen } from "@/screens/AuthScreen";
 import { useCart } from "@/context/CartContext";
-import { Home, ShoppingBag, User } from "lucide-react-native";
+import { useAuth } from "@/context/AuthContext";
+import { Home, ShoppingBag, User, LogIn } from "lucide-react-native";
 import * as Linking from "expo-linking";
 
 export type RootStackParamList = {
-  Main: { screen?: "Home" | "Cart" | "Account" } | undefined;
+  Main: { screen?: "Home" | "Cart" | "Account" | "AuthTab" } | undefined;
   Home: undefined;
   Cart: undefined;
   Account: undefined;
@@ -80,6 +81,7 @@ const linking: any = {
 
 function MainTabs() {
   const { totals } = useCart();
+  const { user } = useAuth();
 
   return (
     <Tab.Navigator
@@ -129,14 +131,25 @@ function MainTabs() {
           tabBarIcon: ({ color, size }) => <ShoppingBag size={size} color={color} />,
         }}
       />
-      <Tab.Screen
-        name="Account"
-        component={AccountScreen}
-        options={{
-          tabBarLabel: "Account",
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
-        }}
-      />
+      {user ? (
+        <Tab.Screen
+          name="Account"
+          component={AccountScreen}
+          options={{
+            tabBarLabel: "Account",
+            tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          }}
+        />
+      ) : (
+        <Tab.Screen
+          name="AuthTab"
+          component={AuthScreen}
+          options={{
+            tabBarLabel: "Sign In",
+            tabBarIcon: ({ color, size }) => <LogIn size={size} color={color} />,
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 }

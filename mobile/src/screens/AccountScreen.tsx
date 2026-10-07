@@ -85,11 +85,56 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         style: "destructive",
         onPress: async () => {
           await signOut();
-          navigation.navigate("Auth");
+          setOrders([]);
+          navigation.navigate("Main", { screen: "Home" });
         },
       },
     ]);
   };
+
+  if (!user) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={styles.topBar}>
+          <View style={styles.brandRow}>
+            <View style={styles.logoBadge}>
+              <Zap size={18} color={colors.onPrimary} fill={colors.onPrimary} />
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 2 }}>
+              <Text style={styles.brandTitle}>Slurge</Text>
+              <Text style={styles.brandReg}>®</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.guestContainer}>
+          <View style={styles.guestIconCircle}>
+            <User size={44} color={colors.brand} />
+          </View>
+          <Text style={styles.guestTitle}>Sign In to Your Account</Text>
+          <Text style={styles.guestSub}>
+            Sign in or create an account to view your live orders, delivery updates, and saved addresses.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.guestPrimaryBtn}
+            onPress={() => navigation.navigate("Auth")}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.guestPrimaryBtnText}>Sign In / Create Account</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.guestSecondaryBtn}
+            onPress={() => navigation.navigate("Main", { screen: "Home" })}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.guestSecondaryBtnText}>Browse Shop</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const activeOrder = orders.find(
     (o) => o.status === "paid" || o.status === "processing" || o.status === "shipped" || o.status === "pending"
@@ -99,12 +144,10 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
   const displayName =
     user?.user_metadata?.full_name ||
-    (user?.email ? user.email.split("@")[0] : "New Customer");
+    (user?.email ? user.email.split("@")[0] : "Customer");
 
-  const displayEmail = user?.email || "No email connected";
-  const displayPhone = user?.user_metadata?.phone || "No phone added yet";
-  const membershipTier =
-    orders.length >= 5 ? "Slurge VIP Platinum" : orders.length >= 2 ? "Slurge VIP Gold" : "Slurge Member";
+  const displayEmail = user?.email || "";
+  const displayPhone = user?.phone || user?.user_metadata?.phone || "";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -178,12 +221,14 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
             <View style={{ flex: 1 }}>
               <Text style={styles.userName}>{displayName}</Text>
-              <View style={styles.vipBadge}>
-                <Award size={12} color={colors.brand} />
-                <Text style={styles.vipBadgeText}>{membershipTier}</Text>
-              </View>
-              <Text style={styles.userEmail}>{displayEmail}</Text>
-              <Text style={styles.userPhone}>{displayPhone}</Text>
+              {orders.length > 0 && (
+                <View style={styles.vipBadge}>
+                  <Award size={12} color={colors.brand} />
+                  <Text style={styles.vipBadgeText}>Verified Customer</Text>
+                </View>
+              )}
+              {displayEmail ? <Text style={styles.userEmail}>{displayEmail}</Text> : null}
+              {displayPhone ? <Text style={styles.userPhone}>{displayPhone}</Text> : null}
             </View>
           </View>
 
@@ -194,24 +239,14 @@ export const AccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                 <Text style={styles.bentoVal}>{orders.length}</Text>
                 {activeOrder && <View style={styles.activeDot} />}
               </View>
-              <Text style={styles.bentoLabel}>Orders ({activeOrder ? "1 Act." : "0 Act."})</Text>
+              <Text style={styles.bentoLabel}>Total Orders</Text>
             </View>
 
             <View style={styles.bentoDivider} />
 
             <View style={styles.bentoCol}>
-              <Text style={styles.bentoVal}>0</Text>
-              <Text style={styles.bentoLabel}>Saved Items</Text>
-            </View>
-
-            <View style={styles.bentoDivider} />
-
-            <View style={styles.bentoCol}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <ShieldCheck size={14} color={colors.brand} />
-                <Text style={styles.bentoVal}>{orders.length > 0 ? orders.length : 0}</Text>
-              </View>
-              <Text style={styles.bentoLabel}>IMEI Reg.</Text>
+              <Text style={styles.bentoVal}>{activeOrder ? 1 : 0}</Text>
+              <Text style={styles.bentoLabel}>Active Orders</Text>
             </View>
           </View>
         </View>
@@ -1114,5 +1149,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     textAlign: "center",
+  },
+  guestContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+  },
+  guestIconCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: colors.brandLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
+  },
+  guestTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+    textAlign: "center",
+  },
+  guestSub: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: spacing.xl,
+    maxWidth: 280,
+  },
+  guestPrimaryBtn: {
+    backgroundColor: colors.brand,
+    width: "100%",
+    paddingVertical: 14,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    marginBottom: spacing.md,
+    shadowColor: colors.brand,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  guestPrimaryBtnText: {
+    color: colors.onPrimary,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  guestSecondaryBtn: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    width: "100%",
+    paddingVertical: 14,
+    borderRadius: radius.lg,
+    alignItems: "center",
+  },
+  guestSecondaryBtnText: {
+    color: colors.textPrimary,
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

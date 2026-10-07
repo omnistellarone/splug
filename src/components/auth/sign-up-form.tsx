@@ -35,7 +35,7 @@ export function SignUpForm() {
       )}
 
       {/* Google Sign Up */}
-      <GoogleSignInButton label="Sign up with Google" />
+      <GoogleSignInButton label="Sign up with Google" redirectTo="/" />
 
       <div className="relative flex items-center justify-center">
         <div className="w-full border-t border-[var(--border)]" />

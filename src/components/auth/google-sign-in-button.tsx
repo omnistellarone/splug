@@ -10,7 +10,7 @@ interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({
-  redirectTo = "/account",
+  redirectTo = "/",
   label = "Continue with Google",
 }: GoogleSignInButtonProps) {
   const [loading, setLoading] = React.useState(false);

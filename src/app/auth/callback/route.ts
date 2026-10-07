@@ -11,8 +11,6 @@ export async function GET(request: NextRequest) {
     next.startsWith("/") && !next.startsWith("//") ? next : "/";
 
   const isExplicitMobile = requestUrl.searchParams.get("mobile") === "true" || next === "mobile";
-  const userAgent = request.headers.get("user-agent") || "";
-  const isMobileBrowser = /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent);
 
   if (code) {
     const supabase = await createClient();

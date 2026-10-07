@@ -249,11 +249,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const isMobile =
-      searchParams.get("mobile") === "true" ||
-      /Android|iPhone|iPad|iPod|Mobile/i.test(request.headers.get("user-agent") || "");
+    const isExplicitMobileApp = searchParams.get("mobile") === "true";
 
-    if (isMobile) {
+    if (isExplicitMobileApp) {
       return NextResponse.redirect(
         `slurge://payment-callback?reference=${encodeURIComponent(reference)}&orderId=${order.id}&status=success`
       );
@@ -278,11 +276,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const isMobile =
-      searchParams.get("mobile") === "true" ||
-      /Android|iPhone|iPad|iPod|Mobile/i.test(request.headers.get("user-agent") || "");
+    const isExplicitMobileApp = searchParams.get("mobile") === "true";
 
-    if (isMobile) {
+    if (isExplicitMobileApp) {
       return NextResponse.redirect(
         `slurge://payment-callback?reference=${encodeURIComponent(reference)}&failed=true`
       );

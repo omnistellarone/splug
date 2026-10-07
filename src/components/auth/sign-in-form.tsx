@@ -14,7 +14,7 @@ interface SignInFormProps {
   errorMessage?: string;
 }
 
-export function SignInForm({ redirectTo = "/account", errorMessage }: SignInFormProps) {
+export function SignInForm({ redirectTo = "/", errorMessage }: SignInFormProps) {
   const [state, formAction, isPending] = React.useActionState(signInAction, null);
   const [showPassword, setShowPassword] = React.useState(false);
 

@@ -19,7 +19,7 @@ interface SignInPageProps {
 
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
-  const redirectTo = params.redirectTo || "/account";
+  const redirectTo = params.redirectTo || "/";
 
   let errorMessage: string | undefined;
   if (params.error === "auth_exchange_failed") {

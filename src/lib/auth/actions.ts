@@ -66,9 +66,9 @@ export async function signInAction(
 
   revalidatePath("/", "layout");
 
-  const redirectTo = (formData.get("redirectTo") as string) || "/account";
+  const redirectTo = (formData.get("redirectTo") as string) || "/";
   // Safe redirect — prevent open redirect vulnerabilities
-  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/account";
+  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/";
   redirect(safeRedirect);
 }
 
@@ -142,7 +142,7 @@ export async function signUpAction(
     };
   }
 
-  redirect("/account");
+  redirect("/");
 }
 
 /**
