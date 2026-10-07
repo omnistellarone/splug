@@ -27,6 +27,8 @@ import {
   CheckCircle2,
   Lock,
   X,
+  Maximize2,
+  Minimize2,
 } from "lucide-react-native";
 import { WebView } from "react-native-webview";
 
@@ -38,8 +40,9 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState<boolean>(true);
 
-  // Add Address Modal state
+  // Add Address Modal state & full-screen shift allowance
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+  const [isAddressModalExpanded, setIsAddressModalExpanded] = useState<boolean>(false);
   const [newFullName, setNewFullName] = useState<string>("");
   const [newPhone, setNewPhone] = useState<string>("");
   const [newLine1, setNewLine1] = useState<string>("");
@@ -493,22 +496,63 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             onPress={() => setShowAddressModal(false)}
           />
           <KeyboardAvoidingView
-            style={styles.modalKeyboardAvoid}
+            style={[
+              styles.modalKeyboardAvoid,
+              isAddressModalExpanded && styles.modalKeyboardAvoidExpanded,
+            ]}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
           >
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, isAddressModalExpanded && styles.modalContentExpanded]}>
+              {/* Sheet Drag & Expand Handle */}
+              <TouchableOpacity
+                style={styles.sheetDragHandleArea}
+                onPress={() => setIsAddressModalExpanded((prev) => !prev)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.sheetDragHandleBar} />
+              </TouchableOpacity>
+
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Add Delivery Address</Text>
-                <TouchableOpacity onPress={() => setShowAddressModal(false)} style={{ padding: 4 }}>
-                  <X size={20} color={colors.textPrimary} />
-                </TouchableOpacity>
+                <View style={styles.modalHeaderLeft}>
+                  <Text style={styles.modalTitle}>Add Delivery Address</Text>
+                  <Text style={styles.modalSubtitle}>Tap expand or scroll for full keyboard room</Text>
+                </View>
+                <View style={styles.modalHeaderActions}>
+                  <TouchableOpacity
+                    style={styles.expandPill}
+                    onPress={() => setIsAddressModalExpanded((prev) => !prev)}
+                    activeOpacity={0.7}
+                  >
+                    {isAddressModalExpanded ? (
+                      <>
+                        <Minimize2 size={13} color={colors.textSecondary} />
+                        <Text style={styles.expandPillText}>Collapse</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 size={13} color={colors.textSecondary} />
+                        <Text style={styles.expandPillText}>Expand Full</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowAddressModal(false);
+                      setIsAddressModalExpanded(false);
+                    }}
+                    style={styles.closeBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <X size={20} color={colors.textPrimary} />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <ScrollView
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={styles.modalForm}
+                contentContainerStyle={[styles.modalForm, { paddingBottom: 220 }]}
               >
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Recipient Full Name</Text>
@@ -517,6 +561,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     value={newFullName}
                     onChangeText={setNewFullName}
                     placeholder="e.g. Ebuka Nwosu"
+                    onFocus={() => setIsAddressModalExpanded(true)}
                   />
                 </View>
 
@@ -528,6 +573,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     onChangeText={setNewPhone}
                     placeholder="e.g. +234 803 123 4567"
                     keyboardType="phone-pad"
+                    onFocus={() => setIsAddressModalExpanded(true)}
                   />
                 </View>
 
@@ -538,6 +584,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                     value={newLine1}
                     onChangeText={setNewLine1}
                     placeholder="House number, street name"
+                    onFocus={() => setIsAddressModalExpanded(true)}
                   />
                 </View>
 
@@ -549,6 +596,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                       value={newCity}
                       onChangeText={setNewCity}
                       placeholder="City or town"
+                      onFocus={() => setIsAddressModalExpanded(true)}
                     />
                   </View>
                   <View style={[styles.field, { flex: 1 }]}>
@@ -558,6 +606,7 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                       value={newState}
                       onChangeText={setNewState}
                       placeholder="State (e.g. Lagos, Abuja)"
+                      onFocus={() => setIsAddressModalExpanded(true)}
                     />
                   </View>
                 </View>
@@ -956,6 +1005,10 @@ const styles = StyleSheet.create({
     maxHeight: "88%",
     justifyContent: "flex-end",
   },
+  modalKeyboardAvoidExpanded: {
+    maxHeight: "97%",
+    height: "97%",
+  },
   modalContent: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.xl,
@@ -968,16 +1021,66 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 25,
   },
+  modalContentExpanded: {
+    height: "100%",
+    maxHeight: "100%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  sheetDragHandleArea: {
+    alignItems: "center",
+    paddingVertical: 6,
+    marginBottom: 6,
+  },
+  sheetDragHandleBar: {
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.borderSubtle,
+  },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: spacing.base,
+  },
+  modalHeaderLeft: {
+    flex: 1,
+    paddingRight: 8,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: "700",
     color: colors.textPrimary,
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  modalHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  expandPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceContainerHigh,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  expandPillText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.textSecondary,
+  },
+  closeBtn: {
+    padding: 4,
   },
   modalForm: {
     gap: spacing.md,

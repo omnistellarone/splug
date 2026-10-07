@@ -23,11 +23,20 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedQuery, setDebouncedQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [catalogY, setCatalogY] = useState<number>(340);
   const flatListRef = React.useRef<FlatList>(null);
+
+  // Debounce search query to prevent rapid re-fetching and provide smooth typing
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 280);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -36,7 +45,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         api.getCategories(),
         api.getProducts({
           category: selectedCategory !== "all" ? selectedCategory : undefined,
-          query: searchQuery.trim() || undefined,
+          query: debouncedQuery.trim() || undefined,
         }),
       ]);
 
@@ -54,7 +63,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, debouncedQuery]);
 
   useEffect(() => {
     loadData();
@@ -72,26 +81,6 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const renderHeader = () => (
     <View>
-      {/* Search Bar */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Search size={18} color={colors.textPlaceholder} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search iPhones, MacBooks, Audio..."
-            placeholderTextColor={colors.textPlaceholder}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")} activeOpacity={0.7}>
-              <X size={16} color={colors.textPlaceholder} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
       {/* Promotional Hero Banner with Liquid Glass Effect */}
       <View style={styles.heroBanner}>
         <View style={styles.heroBadge}>
@@ -196,6 +185,32 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header onPressCart={() => navigation.navigate("Main", { screen: "Cart" })} />
 
+      {/* Sticky Search Bar - Outside FlatList so TextInput never unmounts on keystrokes */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchBox}>
+          <Search size={18} color={colors.textPlaceholder} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search iPhones, MacBooks, Audio..."
+            placeholderTextColor={colors.textPlaceholder}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <X size={16} color={colors.textPlaceholder} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       <FlatList
         ref={flatListRef}
         data={products}
@@ -203,6 +218,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         ListHeaderComponent={renderHeader}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.brand]} />
@@ -249,7 +266,10 @@ const styles = StyleSheet.create({
     width: "48%",
   },
   searchRow: {
-    marginVertical: spacing.sm,
+    paddingHorizontal: spacing.base,
+    paddingTop: 4,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.background,
   },
   searchBox: {
     flexDirection: "row",
